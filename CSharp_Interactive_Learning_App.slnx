@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="CSharp_Interactive_Learning_App.API/CSharp_Interactive_Learning_App.API.csproj" />
+  <Project Path="CSharp_Interactive_Learning_App/CSharp_Interactive_Learning_App.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="CSharp_Interpreter/CSharp_Interpreter.csproj" />
+</Solution>

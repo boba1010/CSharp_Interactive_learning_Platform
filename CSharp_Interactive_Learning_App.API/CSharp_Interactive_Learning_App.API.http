@@ -1,0 +1,6 @@
+@CSharp_Interactive_Learning_App.API_HostAddress = http://localhost:5027
+
+GET {{CSharp_Interactive_Learning_App.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
