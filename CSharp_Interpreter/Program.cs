@@ -2,7 +2,9 @@
 using CSharp_Interpreter.Exceptions;
 using CSharp_Interpreter.Models;
 using CSharp_Interpreter.Utils;
-using System.Diagnostics;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using System.Reflection;
 
 public class Program
 {
@@ -20,31 +22,36 @@ public class Program
         string codeText = File.ReadAllText(path);
         tokens = Tokenizer.Tokenize(codeText);
 
+        ParseUsingDirective();
+
         GatherMethodDeclarations();
 
-        List<StatementNode> statements = [];
         for (int i = 0; i < tokens.Count; i++)
-            statements.Add(ParseStatement());
+            ParseStatement();
 
-        BlockNode block = null;
-        foreach (var stmt in statements)
-        {
-            if (stmt is BlockNode scope)
-                block = scope;
-        }
+        var syntaxTree = CSharpSyntaxTree.ParseText(codeText);
 
-        string pyCode = CodeGenerator.GeneratePyCode(block);
-        File.AppendAllText("temp.py", pyCode);
+        var compilation = CSharpCompilation.Create(
+            "Temp",
+            [syntaxTree],
+            [MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
+                MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location)],
+            new CSharpCompilationOptions(OutputKind.ConsoleApplication)
+            );
 
-        // runs the python interpreter to execute code
-        var process = new Process();
-        process.StartInfo.FileName = "python";
-        process.StartInfo.Arguments = "temp.py";
-        process.StartInfo.RedirectStandardOutput = true;
-        process.Start();
-        string output = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
-        Console.WriteLine(output);
+        // compile into memory
+        using var ms = new MemoryStream();
+        var result = compilation.Emit(ms);
+
+        // load assembly
+        ms.Seek(0, SeekOrigin.Begin);
+        var assembly = Assembly.Load(ms.ToArray());
+
+        // execute Main
+        var type = assembly.GetType("Program");
+        var method = type.GetMethod("Main");
+        method.Invoke(null, null);
     }
 
     private static Token Peek(int index = 0)
@@ -92,7 +99,7 @@ public class Program
     private static StatementNode ParseBlock()
     {
         List<StatementNode> statements = [];
-        Consume(TokenType.LeftBrace, "Expected '{'");
+        Consume(TokenType.LeftBrace, $"You forgot a '{{' at line: {Peek().LineNumber - 1}.");
         PushVariableScope();
         while (!Match(TokenType.RightBrace))
         {
@@ -101,7 +108,7 @@ public class Program
                 statements.Add(statement);
         }
 
-        Consume(TokenType.RightBrace, "Expected '}'");
+        Consume(TokenType.RightBrace, $"You forgot a '}}' at line: {Peek().LineNumber - 1}.");
         PopVariableScope();
         return new BlockNode { Statements = statements };
     }
@@ -111,7 +118,7 @@ public class Program
         try
         {
             List<StatementNode> statements = [];
-            Consume(TokenType.LeftBrace, "Expected '{'");
+            Consume(TokenType.LeftBrace, $"You forgot a '{{' at line: {Peek().LineNumber - 1}.");
             while (!Match(TokenType.RightBrace))
             {
                 var statement = ParseStatement();
@@ -119,7 +126,7 @@ public class Program
                     statements.Add(statement);
             }
 
-            Consume(TokenType.RightBrace, "Expected '}'");
+            Consume(TokenType.RightBrace, $"You forgot a '}}' at line: {Peek().LineNumber - 1}.");
             return new BlockNode { Statements = statements };
         }
         catch (CompilerError ex)
@@ -164,7 +171,7 @@ public class Program
                     Advance();
                     return null;
                 default:
-                    throw new CompilerError($"Unexpected token '{currentToken.Value}' at line: {currentToken.LineNumber}, column: {currentToken.ColumnNumber}.");
+                    throw new CompilerError($"Unsupported token '{currentToken.Value}' at line: {currentToken.LineNumber}, column: {currentToken.ColumnNumber}.");
             }
         }
         catch (CompilerError ex)
@@ -206,24 +213,51 @@ public class Program
 
     private static StatementNode ParseDeclaration()
     {
-        Token typeToken = Consume(TokenType.Keyword, $"Expected variable type at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+        Token typeToken = Consume(TokenType.Keyword, $"You can't declare a variable without a date type, fix it at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
         DataType type = ParseDataType(typeToken.Value); // convert string to enum
         if (type == DataType.Void)
             throw new CompilerError("A variable cannot be of type void.");
-        Token nameToken = Consume(TokenType.Identifier, $"Expected variable name at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+        Token nameToken = Consume(TokenType.Identifier, $"You need a variable name at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
         string name = nameToken.Value;
 
-        Consume(TokenType.Equals, $"Expected '=' after variable name at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
-
-        ExpressionNode expr = ParseExpression();
-        if (expr is LiteralNode ln)
+        ExpressionNode expr = null;
+        if (Peek().Type == TokenType.Equals)
         {
-            if (type != ln.Type) 
-                throw new CompilerError($"Cannot implicitly convert type '{type.ToString().ToLower()}' to '{ln.Type.ToString().ToLower()}' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+            Consume(TokenType.Equals, $"You forgot a '=' after the variable name at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+
+            expr = ParseExpression();
+            if (expr is LiteralNode ln)
+            {
+                if (type != ln.Type) 
+                    throw new CompilerError($"You can't assign type '{ln.Type.ToString().ToLower()}' to '{type.ToString().ToLower()}' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+                Consume(TokenType.Semicolon, $"You forgot a ';' at end of statement at line: {Peek().LineNumber - 1}.");
+            }
+            else if (expr is MethodCallExpressionNode methodCallExpression)
+            {
+                if (methodCallExpression.Type != type)
+                    throw new CompilerError($"You can't assign type '{methodCallExpression.Type.ToString().ToLower()}' to '{type.ToString().ToLower()}' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+            }
+            else if (expr is VariableNode variable)
+            {
+                if (variables.Peek().ContainsKey(variable.Name))
+                {
+                    if (variables.Peek()[variable.Name].Type != type)
+                        throw new CompilerError($"You can't assign type '{variables.Peek()[variable.Name].Type.ToString().ToLower()}' to '{type.ToString().ToLower()}' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+                    Consume(TokenType.Semicolon, $"You forgot a ';' at end of statement at line: {Peek().LineNumber - 1}.");
+                }
+            }
         }
 
-        Consume(TokenType.Semicolon, $"Expected ';' at end of statement at line: {Peek().LineNumber - 1}.");
+        if (Peek().Type == TokenType.Int ||
+            Peek().Type == TokenType.String ||
+            Peek().Type == TokenType.Double ||
+            Peek().Type == TokenType.Float ||
+            Peek().Type == TokenType.Char ||
+            Peek().Type == TokenType.Bool)
+            throw new CompilerError("You must have an '=' before a literal.");
 
+        if (expr == null)
+            Consume(TokenType.Semicolon, $"You forgot a ';' at end of statement at line: {Peek().LineNumber - 1}.");
         AddVariable(new()
         {
             Name = name,
@@ -488,7 +522,12 @@ public class Program
             if (Match(TokenType.Double)) return new LiteralNode { Value = Advance().Value, Type = DataType.Double };
             if (Match(TokenType.Float)) return new LiteralNode { Value = Advance().Value, Type = DataType.Float };
             if (Match(TokenType.String)) return new LiteralNode { Type = DataType.String, Value = Advance().Value };
-            if (Match(TokenType.Identifier)) return new VariableNode { Type = ParseDataType(Peek().Type.ToString().ToLower(), Peek().Value), Name = Advance().Value };
+            if (Match(TokenType.Identifier))
+            {
+                if (Match(TokenType.LeftParenthesis, 1))
+                    return (MethodCallExpressionNode)ParseMethodCall();
+                return new VariableNode { Type = ParseDataType(Peek().Type.ToString().ToLower(), Peek().Value), Name = Advance().Value };
+            }
             if (Match(TokenType.LeftParenthesis))
             {
                 Consume(TokenType.LeftParenthesis, "Expected a '('");
@@ -799,15 +838,15 @@ public class Program
     private static ConsoleNode ParseConsoleInputMethod()
     {
         Consume(TokenType.ConsoleInput);
-        Consume(TokenType.LeftParenthesis, $"Expected '(' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+        Consume(TokenType.LeftParenthesis, $"You forgot a '(' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
         if (Peek().Type == TokenType.RightParenthesis)
         {
             Advance();
-            Consume(TokenType.Semicolon, $"Expected ';' at line: {Peek().LineNumber - 1}.");
+            Consume(TokenType.Semicolon, $"You forgot a ';' at line: {Peek().LineNumber - 1}.");
             return new ConsoleInputNode { };
         }
-        Consume(TokenType.RightParenthesis, $"Expected ')' at line: {Peek().LineNumber - 1}.");
-        Consume(TokenType.Semicolon, $"Expected ';' at line: {Peek().LineNumber - 1}.");
+        Consume(TokenType.RightParenthesis, $"You forgot a ')' at line: {Peek().LineNumber - 1}.");
+        Consume(TokenType.Semicolon, $"You forgot a ';' at line: {Peek().LineNumber - 1}.");
         return new ConsoleInputNode { };
     }
 
@@ -815,7 +854,7 @@ public class Program
     {
         try
         {
-            Consume(TokenType.LeftParenthesis, $"Expected '(' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+            Consume(TokenType.LeftParenthesis, $"You forgot a '(' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
 
             List<ParameterNode> parameters = [];
             while (Peek().Type != TokenType.RightParenthesis)
@@ -836,7 +875,7 @@ public class Program
                 Advance();
             }
 
-            Consume(TokenType.RightParenthesis, $"Expected ')' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+            Consume(TokenType.RightParenthesis, $"You forgot a ')' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
             return parameters;
         }
         catch (CompilerError ex)
@@ -867,7 +906,7 @@ public class Program
             if (stmt is ReturnNode @return)
             {
                 if (@return.ReturnType != type)
-                    throw new CompilerError($"Cannot implicitly convert type '{@return.ReturnType}' to '{type}'");
+                    throw new CompilerError($"You can't return a/an '{@return.ReturnType}' while this method's return type is '{type}'");
                 returnNode = @return;
             }
         }
@@ -895,7 +934,7 @@ public class Program
             value = ParseExpression();
         else
             value = new LiteralNode { Type = DataType.Void };
-        Consume(TokenType.Semicolon, $"Expected ';' at line: {Peek().LineNumber - 1}.");
+        Consume(TokenType.Semicolon, $"You forgot a ';' at line: {Peek().LineNumber - 1}.");
         return new ReturnNode
         {
             ReturnType = value.Type,
@@ -914,7 +953,7 @@ public class Program
             method = methods.Peek()[name];
         else
             throw new CompilerError($"The name '{name}' doesn't exist in this scope.");
-        Consume(TokenType.LeftParenthesis, $"Expected '(' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
+        Consume(TokenType.LeftParenthesis, $"You forgot a '(' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
         List<object> args = [];
         List<DataType> argsType = [];
         while (Peek().Type != TokenType.RightParenthesis)
@@ -934,11 +973,11 @@ public class Program
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (parameters[i].Type != argsType[i])
-                throw new CompilerError($"Cannot implicitly convert '{argsType[i].ToString().ToLower()}' to '{parameters[i].Type.ToString().ToLower()}'");
+                throw new CompilerError($"You can't give this method arguement of type '{argsType[i].ToString().ToLower()}' while the parameter is '{parameters[i].Type.ToString().ToLower()}' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}");
         }
 
-        Consume(TokenType.RightParenthesis, $"Expected ')' at line: {Peek().LineNumber - 1}");
-        Consume(TokenType.Semicolon, $"Expected ';' at line: {Peek().LineNumber}");
+        Consume(TokenType.RightParenthesis, $"You forgot a ')' at line: {Peek().LineNumber - 1}");
+        Consume(TokenType.Semicolon, $"You forgot a ';' at line: {Peek().LineNumber}");
         return new MethodCallNode
         {
             Name = name,
@@ -964,7 +1003,7 @@ public class Program
                         i++;
 
                         if (tokens[i].Type != TokenType.LeftParenthesis)
-                            throw new CompilerError($"Expected '(' at line: {tokens[i].LineNumber}, column: {tokens[i].ColumnNumber}.");
+                            throw new CompilerError($"You forgot a '(' at line: {tokens[i].LineNumber}, column: {tokens[i].ColumnNumber}.");
 
                         List<Parameter> parameters = [];
                         while (tokens[i].Type != TokenType.RightParenthesis)
@@ -986,7 +1025,7 @@ public class Program
                         }
 
                         if (tokens[i].Type != TokenType.RightParenthesis)
-                            throw new CompilerError($"Expected ')' at line: {tokens[i].LineNumber - 1}");
+                            throw new CompilerError($"You forgot a ')' at line: {tokens[i].LineNumber - 1}");
                     
                         methods.Peek().Add(name, new Method
                         {
@@ -996,6 +1035,23 @@ public class Program
                         });
                     }
                     break;
+            }
+        }
+    }
+
+    private static void ParseUsingDirective()
+    {
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            if (Match(TokenType.UsingDirective))
+            {
+                Advance();
+                if (Peek().Value == "System" ||
+                    Peek().Value == "System.Collections.Generic")
+                    Advance();
+                else
+                    throw new SecurityError("Security Error: Cannot use namespaces except 'System' and 'System.Collections.Generic'.");
+                Consume(TokenType.Semicolon, $"You forgot a semicolon at line: {Peek().LineNumber - 1}.");
             }
         }
     }

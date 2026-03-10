@@ -49,6 +49,7 @@ namespace CSharp_Interpreter.Models
         Dot,
         Void,
         Return,
+        UsingDirective,
         Unknown,
         EOF,
     }

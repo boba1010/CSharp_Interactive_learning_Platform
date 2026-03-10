@@ -88,6 +88,8 @@ namespace CSharp_Interpreter.Core
                         tokens.Add(new Token(TokenType.ConsoleInput, word, line, column));
                     else if (word == "return")
                         tokens.Add(new Token(TokenType.Return, word, line, column));
+                    else if (word == "using")
+                        tokens.Add(new Token(TokenType.UsingDirective, word, line, column));
                     else
                         tokens.Add(new Token(TokenType.Identifier, word, line, column));
                 }

@@ -43,6 +43,11 @@ namespace CSharp_Interpreter.Models
         PlusPlus,
         MinusMinus
     }
+    public class UsingDirectiveNode : Node 
+    {
+        public string NameSpace { get; set; }
+    }
+
     public class AssignementNode : StatementNode
     {
         public DataType Type { get; set; }
@@ -161,6 +166,26 @@ namespace CSharp_Interpreter.Models
         public override DataType Type { get; set; }
     }
 
+    public class MethodCallExpressionNode : ExpressionNode
+    {
+        public string Name { get; set; }
+        public object[] Arguments { get; set; }
+        public override DataType Type { get; set; }
 
-    
+        public static explicit operator MethodCallExpressionNode(StatementNode v)
+        {
+            if (v is MethodCallNode methodCall)
+            {
+                return new MethodCallExpressionNode
+                {
+                    Type = methodCall.ReturnType,
+                    Name = methodCall.Name,
+                    Arguments = methodCall.Arguments
+                };
+            }
+
+            throw new InvalidCastException($"Cannot convert {v.GetType().Name} to MethodCallExpressionNode");
+        }
+    }
+
 }

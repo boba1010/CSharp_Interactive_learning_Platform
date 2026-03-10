@@ -12,4 +12,6 @@ namespace CSharp_Interpreter.Exceptions
     public class RuntimeError(string msg) : Exception(msg)
     {
     }
+
+    public class SecurityError(string msg) : Exception(msg) { }
 }
