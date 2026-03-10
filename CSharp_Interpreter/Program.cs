@@ -108,17 +108,26 @@ public class Program
 
     private static StatementNode ParseForBlock()
     {
-        List<StatementNode> statements = [];
-        Consume(TokenType.LeftBrace, "Expected '{'");
-        while (!Match(TokenType.RightBrace))
+        try
         {
-            var statement = ParseStatement();
-            if (statement != null)
-                statements.Add(statement);
-        }
+            List<StatementNode> statements = [];
+            Consume(TokenType.LeftBrace, "Expected '{'");
+            while (!Match(TokenType.RightBrace))
+            {
+                var statement = ParseStatement();
+                if (statement != null)
+                    statements.Add(statement);
+            }
 
-        Consume(TokenType.RightBrace, "Expected '}'");
-        return new BlockNode { Statements = statements };
+            Consume(TokenType.RightBrace, "Expected '}'");
+            return new BlockNode { Statements = statements };
+        }
+        catch (CompilerError ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            Environment.Exit(0);
+            return null;
+        }
     }
 
     private static StatementNode ParseStatement()
@@ -161,7 +170,13 @@ public class Program
         catch (CompilerError ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
-            Environment.Exit(1);
+            Environment.Exit(0);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            Environment.Exit(0);
             return null;
         }
     }
@@ -348,13 +363,7 @@ public class Program
         catch (KeyNotFoundException)
         {
             Console.WriteLine($"Error: The name '{nameToken.Value}' doesn't exist in this scope at line: {nameToken.LineNumber}, column: {nameToken.ColumnNumber}.");
-            Environment.Exit(1);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-            Environment.Exit(1);
+            Environment.Exit(0);
             return null;
         }
     }
@@ -658,7 +667,7 @@ public class Program
             "bool" => DataType.Bool,
             "char" => DataType.Char,
             "string" => DataType.String,
-            _ => throw new Exception($"Unknown type: '{typeStr}' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.")
+            _ => throw new CompilerError($"Unknown type: '{typeStr}' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.")
         };
     }
 
@@ -768,7 +777,7 @@ public class Program
             return ParseConsoleOutputMethod();
         if (Match(TokenType.ConsoleInput))
             return ParseConsoleInputMethod();
-        throw new Exception("Invalid Console method.");
+        throw new CompilerError("Invalid Console method.");
     }
 
     private static ConsoleNode ParseConsoleOutputMethod()
@@ -852,13 +861,21 @@ public class Program
 
         var body = (BlockNode)ParseBlock();
 
+        ReturnNode returnNode = null;
         foreach (var stmt in body.Statements)
         {
             if (stmt is ReturnNode @return)
             {
                 if (@return.ReturnType != type)
                     throw new CompilerError($"Cannot implicitly convert type '{@return.ReturnType}' to '{type}'");
+                returnNode = @return;
             }
+        }
+
+        if (type != DataType.Void)
+        {
+            if (returnNode == null)
+                throw new CompilerError($"Method '{name}' should return a value while it is not of type void.");
         }
 
         return new MethodDeclarationNode
@@ -899,24 +916,34 @@ public class Program
             throw new CompilerError($"The name '{name}' doesn't exist in this scope.");
         Consume(TokenType.LeftParenthesis, $"Expected '(' at line: {Peek().LineNumber}, column: {Peek().ColumnNumber}.");
         List<object> args = [];
+        List<DataType> argsType = [];
         while (Peek().Type != TokenType.RightParenthesis)
         {
             Token argToken = Peek();
-            var argType = ParseDataType(argToken.Type.ToString());
+            var argType = ParseDataType(argToken.Type.ToString().ToLower());
+            argsType.Add(argType);
             args.Add(argToken.Value);
             Advance();
         }
-        if (args.Count > method.Parameters.Length)
-            throw new CompilerError("");
         if (args.Count < method.Parameters.Length)
-            throw new CompilerError("");
+            throw new CompilerError("There is no arguments given to this method.");
+        if (args.Count > method.Parameters.Length)
+            throw new CompilerError($"This method takes only {method.Parameters.Length} argument.");
+
+        var parameters = method.Parameters;
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            if (parameters[i].Type != argsType[i])
+                throw new CompilerError($"Cannot implicitly convert '{argsType[i].ToString().ToLower()}' to '{parameters[i].Type.ToString().ToLower()}'");
+        }
+
         Consume(TokenType.RightParenthesis, $"Expected ')' at line: {Peek().LineNumber - 1}");
         Consume(TokenType.Semicolon, $"Expected ';' at line: {Peek().LineNumber}");
         return new MethodCallNode
         {
             Name = name,
             ReturnType = method.ReturnType,
-            Arguments = []
+            Arguments = [.. args]
         };
     }
 

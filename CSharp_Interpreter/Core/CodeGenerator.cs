@@ -10,10 +10,24 @@ namespace CSharp_Interpreter.Core
     {
         public static string GeneratePyCode(BlockNode block, int indent = 0, int innerIndent = 1)
         {
-            // python indent
             string indentation = new(' ', indent * 4);
-
             var lines = new List<string>();
+
+            string entryPoint = "";
+
+            foreach (var stmt in block.Statements)
+            {
+                switch(stmt)
+                {
+                    case MethodDeclarationNode methodDeclaration:
+                        if (methodDeclaration.Name == "Main")
+                            entryPoint += ResolveEntryPoint(methodDeclaration);
+                        else
+                            lines.Add($"{GenerateMethodDeclarationPyCode(methodDeclaration)}");
+                        break;
+                }
+            }
+
             foreach (var stmt in block.Statements)
             {
                 switch (stmt)
@@ -48,21 +62,28 @@ namespace CSharp_Interpreter.Core
                         switch (console)
                         {
                             case ConsoleOutputNode output:
-                                lines.Add($"print({GenerateExpression(output.Object)})");
+                                lines.Add($"{indentation}print({GenerateExpression(output.Object)})");
                                 break;
                             case ConsoleInputNode input:
-                                lines.Add($"input()");
+                                lines.Add($"{indentation}input()");
                                 break;
                         }
                         break;
-                    case MethodDeclarationNode methodDeclaration:
-                        if (methodDeclaration.Name == "Main")
-                            lines.Add(ResolveEntryPoint(methodDeclaration));
-                        else
-                            lines.Add($"{GenerateMethodDeclarationPyCode(methodDeclaration)}");
+                    case MethodCallNode methodCall:
+                        string args = "";
+                        for (int i = 0; i < methodCall.Arguments.Length; i++)
+                        {
+                            if ((i - 1) < methodCall.Arguments.Length)
+                                args += methodCall.Arguments[i];
+                            else
+                                args += $"{methodCall.Arguments[i]}, ";
+                        }
+                        lines.Add($"{indentation}{methodCall.Name}({args})");
                         break;
                 }
             }
+            if (!string.IsNullOrEmpty(entryPoint))
+                lines.Add(entryPoint);
             return string.Join('\n', lines);
         }
 
