@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CSharp_Interpreter": {
+      "commandName": "Project",
+      "commandLineArgs": "\"int i = 5\""
+    }
+  }
+}

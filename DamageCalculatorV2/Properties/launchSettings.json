@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DamageCalculatorV2": {
+      "commandName": "Project",
+      "commandLineArgs": "\"int i = 5; double j = 5D;\" false 2 10"
+    }
+  }
+}

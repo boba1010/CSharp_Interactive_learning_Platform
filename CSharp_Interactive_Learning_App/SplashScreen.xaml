@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CSharp_Interactive_Learning_App.SplashScreen">
+
+    <ScrollView>
+        <Grid
+            Padding="30,0"
+            BackgroundColor="RoyalBlue">
+            <Label 
+                x:Name="SplashScreenLabel" 
+                VerticalOptions="Center" 
+                HorizontalOptions="Center"
+                Text="&lt;/>"
+                FontSize="Medium" 
+                TextColor="White" />
+        </Grid>
+    </ScrollView>
+</ContentPage>

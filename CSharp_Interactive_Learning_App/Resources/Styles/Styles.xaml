@@ -173,14 +173,14 @@
     </Style>
 
     <Style TargetType="Label" x:Key="Headline">
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
         <Setter Property="FontSize" Value="32" />
         <Setter Property="HorizontalOptions" Value="Center" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
     </Style>
 
     <Style TargetType="Label" x:Key="SubHeadline">
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
         <Setter Property="FontSize" Value="24" />
         <Setter Property="HorizontalOptions" Value="Center" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
@@ -413,8 +413,6 @@
         <Setter Property="Shell.UnselectedColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray200}}" />
         <Setter Property="Shell.NavBarHasShadow" Value="False" />
         <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
-        <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light={StaticResource Magenta}, Dark={StaticResource White}}" />
-        <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light={StaticResource Magenta}, Dark={StaticResource White}}" />
         <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray200}}" />
     </Style>
 
@@ -426,9 +424,46 @@
 
     <Style TargetType="TabbedPage">
         <Setter Property="BarBackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}" />
-        <Setter Property="BarTextColor" Value="{AppThemeBinding Light={StaticResource Magenta}, Dark={StaticResource White}}" />
         <Setter Property="UnselectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}" />
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
+    </Style>
+
+    <Style TargetType="Button" x:Key="BorderButton">
+        <Setter Property="WidthRequest" Value="{OnPlatform WinUI=340}" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="BorderWidth" Value="1.2" />
+        <Setter Property="BorderColor" Value="RoyalBlue" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+    </Style>
+
+    <Style TargetType="Button" x:Key="SubmitButton">
+        <Setter Property="WidthRequest" Value="{OnPlatform WinUI=350}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+    </Style>
+    
+    <Style TargetType="Button" x:Key="UnSelectedNavbarButton">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="MinimumHeightRequest" Value="0" />
+        <Setter Property="MinimumHeightRequest" Value="0" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=DarkGrey, Dark=Grey}" />
+    </Style>
+    
+    <Style TargetType="Button" x:Key="SelectedNavbarButton">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="MinimumWidthRequest" Value="0" />
+        <Setter Property="MinimumHeightRequest" Value="0" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Dark={StaticResource PrimaryDark}, Light={StaticResource Primary}}" />
+    </Style>
+    
+    <Style TargetType="BoxView" x:Key="SelectedNavbarLine">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark={StaticResource PrimaryDark}, Light={StaticResource Primary}}" />
+    </Style>
+    
+    <Style TargetType="Border" x:Key="EntryBorder">
+        <Setter Property="Stroke" Value="{AppThemeBinding Dark=LightGrey, Light=Black}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="WidthRequest" Value="{OnPlatform WinUI=350}" />
     </Style>
 
 </ResourceDictionary>

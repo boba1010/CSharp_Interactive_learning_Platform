@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CSharp_Interpreter.Models
+﻿namespace CSharp_Interpreter.Models
 {
     public enum DataType
     {

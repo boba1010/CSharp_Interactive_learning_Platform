@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CSharp_Interactive_Learning_App.Views.UserViews.SignupPage">
+    <Grid
+        Padding="15, 10"
+        RowDefinitions="Auto, *, Auto">
+        <Grid>
+            <Label 
+                HorizontalOptions="Center"
+                FontSize="Medium">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Sign up on " TextColor="{AppThemeBinding Light=Black, Dark=White}" />
+                        <Span Text="&lt;" TextColor="Grey" />
+                        <Span Text="Codebase" TextColor="RoyalBlue" />
+                        <Span Text="/>" TextColor="Grey" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+        </Grid>
+        <Grid
+            Grid.Row="1"
+            RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto"
+            ColumnDefinitions="Auto, *, Auto"
+            VerticalOptions="Center"
+            RowSpacing="5">
+            <Border
+                WidthRequest="{OnPlatform WinUI=350}" 
+                Grid.Column="1"
+                StrokeShape="RoundRectangle 12"
+                Stroke="Black">
+                <VerticalStackLayout>
+                    <Label 
+                        Padding="10, 4, 0, 0"
+                        Text="Full name" />
+                    <Entry 
+                        MinimumHeightRequest="0"
+                        IsSpellCheckEnabled="False"
+                        x:Name="fullNameEntry" />
+                </VerticalStackLayout>
+            </Border>
+            <Border
+                WidthRequest="{OnPlatform WinUI=350}" 
+                Grid.Row="1"
+                Grid.Column="1"
+                StrokeShape="RoundRectangle 12"
+                Stroke="Black">
+                <VerticalStackLayout>
+                    <Label 
+                        Padding="10, 4, 0, 0"
+                        Text="Username" />
+                    <Entry 
+                        MinimumHeightRequest="0"
+                        IsSpellCheckEnabled="False"
+                        x:Name="usernameEntry" />
+                </VerticalStackLayout>
+            </Border>
+            <Border
+                Grid.Row="2"
+                WidthRequest="{OnPlatform WinUI=350}" 
+                Grid.Column="1"
+                StrokeShape="RoundRectangle 12"
+                Stroke="Black">
+                <VerticalStackLayout>
+                    <Label 
+                        Padding="10, 4, 0, 0"
+                        Text="Email address" />
+                    <Entry 
+                        MinimumHeightRequest="0"
+                        IsSpellCheckEnabled="False"
+                        x:Name="emailEntry" />
+                </VerticalStackLayout>
+            </Border>
+            <Border
+                WidthRequest="{OnPlatform WinUI=350}" 
+                Grid.Row="3"
+                Grid.Column="1"
+                StrokeShape="RoundRectangle 12"
+                Stroke="Black">
+                <Grid
+                    RowDefinitions="Auto, Auto"
+                    ColumnDefinitions="*, Auto">
+                    <Label 
+                        Padding="10, 4, 0, 0"
+                        Text="Password" />
+                    <Entry 
+                        Grid.Row="1"
+                        MinimumHeightRequest="0"
+                        IsSpellCheckEnabled="False"
+                        x:Name="passwordEntry" />
+                    <Button 
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        MinimumWidthRequest="0"
+                        Text="Show"
+                        BackgroundColor="Transparent"
+                        TextColor="{AppThemeBinding Dark=White, Light=Black}" 
+                        Clicked="OnPasswordShowButtonClicked" 
+                        x:Name="passwordShowButton" />
+                </Grid>
+            </Border>
+            <Label 
+                WidthRequest="{OnPlatform WinUI=350}" 
+                Grid.Column="1"
+                Grid.Row="4"
+                x:Name="errorLabel"
+                IsVisible="False" 
+                TextColor="Red" />
+            <Button 
+                Grid.Column="1"
+                Grid.Row="5" 
+                Style="{StaticResource SubmitButton}"
+                Text="Create an account"
+                Clicked="OnSignupButtonClicked" />
+        </Grid>
+        <Grid
+            Grid.Row="2"
+            VerticalOptions="End">
+            <Button 
+                Grid.Column="1"
+                Grid.Row="3" 
+                Style="{StaticResource BorderButton}"
+                Text="have an account? Login." 
+                Clicked="OnLoginButtonClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>

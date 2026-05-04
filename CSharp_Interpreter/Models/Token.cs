@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CSharp_Interpreter.Models
+﻿namespace CSharp_Interpreter.Models
 {
     public enum TokenType
     {
@@ -50,6 +46,12 @@ namespace CSharp_Interpreter.Models
         Void,
         Return,
         UsingDirective,
+        Switch,
+        Case,
+        Default,
+        Break,
+        Colon,
+        Do,
         Unknown,
         EOF,
     }
@@ -60,6 +62,12 @@ namespace CSharp_Interpreter.Models
         public string Value;
         public int LineNumber;
         public int ColumnNumber;
+
+        public Token(TokenType type, string value)
+        {
+            Type = type;
+            Value = value;
+        }
 
         public Token(TokenType type, string value, int lineNumber)
         {

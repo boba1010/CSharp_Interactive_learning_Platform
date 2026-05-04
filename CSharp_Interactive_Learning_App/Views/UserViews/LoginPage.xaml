@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CSharp_Interactive_Learning_App.Views.UserViews.LoginPage">
+    <Grid
+        Padding="15, 10"
+        RowDefinitions="Auto, *, Auto">
+        <Grid>
+            <Label 
+                HorizontalOptions="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Login to " TextColor="{AppThemeBinding Dark=White, Light=Black}" FontSize="20" />
+                        <Span Text="&lt;" TextColor="Grey" FontSize="20" />
+                        <Span Text="Codebase" TextColor="RoyalBlue" FontSize="20" />
+                        <Span Text="/>" TextColor="Grey" FontSize="20" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+        </Grid>
+        <Grid
+            Grid.Row="1"
+            RowDefinitions="Auto, Auto, Auto, Auto"
+            ColumnDefinitions="Auto, *, Auto"
+            VerticalOptions="Center"
+            RowSpacing="5">
+            <Border
+                Style="{StaticResource EntryBorder}"
+                Grid.Column="1">
+                <VerticalStackLayout>
+                    <Label 
+                        Padding="10, 4, 0, 0"
+                        Text="Email address" />
+                    <Entry 
+                        MinimumHeightRequest="0"
+                        IsSpellCheckEnabled="False"
+                        x:Name="emailEntry" />
+                </VerticalStackLayout>
+            </Border>
+            <Border
+                Style="{StaticResource EntryBorder}"
+                Grid.Column="1"
+                Grid.Row="1">
+                <Grid
+                    RowDefinitions="Auto, Auto"
+                    ColumnDefinitions="*, Auto">
+                    <Label 
+                        Padding="10, 4, 0, 0"
+                        Text="Password" />
+                    <Entry 
+                        Grid.Row="1"
+                        MinimumHeightRequest="0"
+                        IsSpellCheckEnabled="False"
+                        IsPassword="True"
+                        x:Name="passwordEntry" />
+                    <Button 
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        MinimumWidthRequest="0"
+                        Text="Show"
+                        BackgroundColor="Transparent"
+                        TextColor="{AppThemeBinding Dark=White, Light=Black}" 
+                        Clicked="OnPasswordShowButtonClicked" 
+                        x:Name="passwordShowButton" />
+                </Grid>
+            </Border>
+            <Label 
+                WidthRequest="{OnPlatform WinUI=350}" 
+                Grid.Column="1"
+                Grid.Row="2"
+                x:Name="errorLabel"
+                IsVisible="False" 
+                TextColor="Red" />
+            <Button 
+                Grid.Column="1"
+                Grid.Row="3" 
+                Style="{StaticResource SubmitButton}"
+                Text="Login"
+                Clicked="OnLoginButtonClicked" />
+        </Grid>
+        <Grid
+            Grid.Row="2"
+            VerticalOptions="End">
+            <Button 
+                Grid.Column="1"
+                Grid.Row="3"
+                Style="{StaticResource BorderButton}"
+                Text="Don't have an account? Create a new account." 
+                Clicked="OnSignupButtonClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>

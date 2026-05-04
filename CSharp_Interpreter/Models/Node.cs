@@ -1,48 +1,13 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CSharp_Interpreter.Models
+﻿namespace CSharp_Interpreter.Models
 {
-    public enum StatementType
-    {
-        Block,
-        If,
-        ElseIf,
-        Else,
-        While,
-        For,
-        VariableDeclaration,
-        VariableAssignement,
-        ConsoleOutput,
-        ConsoleInput,
-        MethodDeclaration,
-        Return,
-        MethodCall,
-    }
-
     public abstract class Node { } // any node
-    public abstract class StatementNode : Node // any statement
-    {
-        //public abstract StatementType StatementType { get; set; }
-    } 
+    public abstract class StatementNode : Node { } // any statement 
 
     public abstract class ExpressionNode : Node // any expression
     { 
         public abstract DataType Type { get; set; }
     } 
 
-    public enum AssignmentType
-    {
-        Equal,
-        PlusEqual,
-        MinusEqual,
-        StarEqual,
-        SlashEqual,
-        PlusPlus,
-        MinusMinus
-    }
     public class UsingDirectiveNode : Node 
     {
         public string NameSpace { get; set; }
@@ -52,7 +17,6 @@ namespace CSharp_Interpreter.Models
     {
         public DataType Type { get; set; }
         public string Name { get; set; }
-        public AssignmentType AssignmentType { get; set; }
         public ExpressionNode Expression { get; set; }
     }
 
@@ -139,6 +103,36 @@ namespace CSharp_Interpreter.Models
         public object[] Arguments { get; set; }
     }
 
+    public class SwitchBlockNode : StatementNode
+    {
+        public CaseNode[] Cases { get; set; }
+    }
+
+    public class SwitchNode : StatementNode
+    {
+        public ExpressionNode Expression { get; set; }
+        public SwitchBlockNode Body { get; set; }
+    }
+
+    public class CaseNode : Node
+    {
+        public ExpressionNode Condition { get; set; }
+        public BlockNode Body { get; set; }
+    }
+
+    public class DefaultNode : Node
+    {
+        public StatementNode Body { get; set; }
+    }
+
+    public class BreakNode : StatementNode { }
+
+    public class DoWhileNode : StatementNode
+    {
+        public ExpressionNode Condition { get; set; }
+        public BlockNode Body { get; set; }
+    }
+
     public class LiteralNode : ExpressionNode
     {
         public object Value { get; set; }
@@ -149,6 +143,11 @@ namespace CSharp_Interpreter.Models
     {
         public string Name { get; set; } = null!;
         public override DataType Type { get; set; }
+
+        public static explicit operator VariableNode(Variable v)
+        {
+            return new VariableNode { Name = v.Name, Type = v.Type };
+        }
     }
 
     public class BinaryExpressionNode : ExpressionNode

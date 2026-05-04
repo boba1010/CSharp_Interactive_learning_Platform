@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:CSharp_Interactive_Learning_App.ViewModels"
+             xmlns:models="clr-namespace:CSharp_Interactive_Learning_App.Models"
+             x:Class="CSharp_Interactive_Learning_App.Views.UserViews.ProfilePage"
+             x:DataType="viewmodel:UserViewModel">
+    <Grid
+        RowDefinitions="Auto, *"
+        RowSpacing="10">
+        <!-- Navbar -->
+        <Grid
+            ColumnDefinitions="Auto, Auto, Auto, Auto, Auto"
+            HorizontalOptions="Center">
+            <Button 
+                Text="Home" 
+                Clicked="OnHomeButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <Button 
+                Grid.Column="1"
+                Text="Leaderboard" 
+                Clicked="OnLeaderboardButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <Button 
+                Grid.Column="2"
+                Text="Profile" 
+                Style="{StaticResource SelectedNavbarButton}" />
+            <Button 
+                Grid.Column="3"
+                Text="Challenges" 
+                Clicked="OnChallengesButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <Button 
+                Grid.Column="4"
+                Text="PlayGround" 
+                Clicked="OnPlayGroundButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <BoxView
+                VerticalOptions="End"
+                HeightRequest="1" />
+            <BoxView
+                Grid.Column="1"
+                VerticalOptions="End"
+                HeightRequest="1" />
+            <BoxView
+                Grid.Column="2"
+                VerticalOptions="End"
+                HeightRequest="1"
+                Style="{StaticResource SelectedNavbarLine}" />
+            <BoxView
+                Grid.Column="3"
+                VerticalOptions="End"
+                HeightRequest="1" />
+            <BoxView
+                Grid.Column="4"
+                VerticalOptions="End"
+                HeightRequest="1" />
+        </Grid>
+        <!-- profile -->
+        <ScrollView
+            Grid.Row="1">
+            <Grid ColumnDefinitions="*, Auto, *"
+                  RowDefinitions="160, Auto, *">
+
+                <BoxView BackgroundColor="{AppThemeBinding Dark={StaticResource PrimaryDark}, Light={StaticResource Primary}}"
+                         Grid.ColumnSpan="3"
+                         HeightRequest="160"
+                         HorizontalOptions="Fill" />
+
+                <Border Grid.RowSpan="2"
+                        Grid.Column="1"
+                        HorizontalOptions="Center"
+                        HeightRequest="160"
+                        WidthRequest="160"
+                        Padding="0"
+                        Margin="0, 80, 0, 0"
+                        StrokeShape="Ellipse"
+                        BackgroundColor="Blue">
+
+                    <Label 
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        Text="B" 
+                        FontSize="50"
+                        TextColor="White" />
+                </Border>
+                <VerticalStackLayout 
+                    Grid.Row="3"
+                    Grid.ColumnSpan="3"
+                    VerticalOptions="Start"
+                    HorizontalOptions="Fill"
+                    Padding="20, 0">
+                    <Label 
+                        HorizontalOptions="Center"
+                        Text="{Binding User.FullName, StringFormat='{0}'}" 
+                        FontSize="20" />
+                    <HorizontalStackLayout
+                        HorizontalOptions="Center">
+                        <Label 
+                            Text="{Binding User.Username, StringFormat='@{0} :'}" 
+                            FontSize="12" />
+                        <Label 
+                            Text="{Binding User.Email, StringFormat=' {0}'}" 
+                            FontSize="12" />
+                    </HorizontalStackLayout>
+
+                    <Label 
+                        Text="Overview" 
+                        FontSize="26"
+                        Margin="0, 10, 0, 2" />
+                    <Grid
+                        ColumnDefinitions="*, *"
+                        ColumnSpacing="10">
+                        <Border
+                            StrokeShape="RoundRectangle 12"
+                            Padding="10">
+                            <Grid
+                                RowDefinitions="Auto, Auto"
+                                ColumnDefinitions="Auto, *"
+                                RowSpacing="6">
+                                <Label 
+                                    Grid.Column="1"
+                                    Text="0" />
+                                <Label 
+                                    Grid.Column="1"
+                                    Grid.Row="1"
+                                    Text="Day streak" 
+                                    TextColor="Grey" />
+                            </Grid>
+                        </Border>
+                        <Border
+                            Grid.Column="1"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="10">
+                            <Grid
+                                RowDefinitions="Auto, Auto"
+                                ColumnDefinitions="Auto, *"
+                                RowSpacing="6">
+                                <Label 
+                                    Grid.Column="1"
+                                    Text="{Binding User.TotalXp}" />
+                                <Label 
+                                    Grid.Column="1"
+                                    Grid.Row="1"
+                                    Text="Total XP" 
+                                    TextColor="Grey"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <Grid
+                        ColumnDefinitions="*, *"
+                        ColumnSpacing="10"
+                        Margin="0, 10, 0, 0">
+                        <Border
+                            StrokeShape="RoundRectangle 12"
+                            Padding="10">
+                            <Grid
+                                RowDefinitions="Auto, Auto"
+                                ColumnDefinitions="Auto, *"
+                                RowSpacing="6">
+                                <Label 
+                                    Grid.Column="1"
+                                    Text="1" />
+                                <Label 
+                                    Grid.Column="1"
+                                    Grid.Row="1"
+                                    Text="Developer level" 
+                                    TextColor="Grey"/>
+                            </Grid>
+                        </Border>
+                        <Border
+                            Grid.Column="1"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="10">
+                            <Grid
+                                RowDefinitions="Auto, Auto"
+                                ColumnDefinitions="Auto, *"
+                                RowSpacing="6">
+                                <Label 
+                                    Grid.Column="1"
+                                    Text="10" />
+                                <Label 
+                                    Grid.Column="1"
+                                    Grid.Row="1"
+                                    Text="Developer points" 
+                                    TextColor="Grey"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>

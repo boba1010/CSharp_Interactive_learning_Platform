@@ -19,7 +19,6 @@ namespace CSharp_Interpreter.Core
                 char nextChar = ' ';
                 if (input.Length > i + 1)
                     nextChar = input[i + 1];
-                //column++;
 
                 // skip whitespaces
                 if (char.IsWhiteSpace(c))
@@ -60,14 +59,6 @@ namespace CSharp_Interpreter.Core
                         tokens.Add(new Token(TokenType.Keyword, word, line, column));
                     else if (word == "void")
                         tokens.Add(new Token(TokenType.Keyword, word, line, column));
-                    else if (word == "public")
-                        tokens.Add(new Token(TokenType.Unknown, word, line, column));
-                    else if (word == "class")
-                        tokens.Add(new Token(TokenType.Unknown, word, line, column));
-                    else if (word == "static")
-                        tokens.Add(new Token(TokenType.Unknown, word, line, column));
-                    else if (word == "Program")
-                        tokens.Add(new Token(TokenType.Unknown, word, line, column));
                     else if (word == "true")
                         tokens.Add(new Token(TokenType.Bool, word, line, column));
                     else if (word == "false")
@@ -90,6 +81,16 @@ namespace CSharp_Interpreter.Core
                         tokens.Add(new Token(TokenType.Return, word, line, column));
                     else if (word == "using")
                         tokens.Add(new Token(TokenType.UsingDirective, word, line, column));
+                    else if (word == "switch")
+                        tokens.Add(new Token(TokenType.Switch, word, line, column));
+                    else if (word == "case")
+                        tokens.Add(new Token(TokenType.Case, word, line, column));
+                    else if (word == "default")
+                        tokens.Add(new Token(TokenType.Default, word, line, column));
+                    else if (word == "break")
+                        tokens.Add(new Token(TokenType.Break, word, line, column));
+                    else if (word == "do")
+                        tokens.Add(new Token(TokenType.Do, word, line, column));
                     else
                         tokens.Add(new Token(TokenType.Identifier, word, line, column));
                 }
@@ -97,17 +98,15 @@ namespace CSharp_Interpreter.Core
                 if (char.IsDigit(c))
                 {
                     string num = "";
-                    while (i < input.Length && char.IsDigit(input[i]) || input[i] == 'D' || input[i] == 'd'
-                            || input[i] == 'F' || input[i] == 'f' || input[i] == '.')
+                    while (i < input.Length && (char.IsDigit(input[i]) || input[i] == 'D' || input[i] == 'd'
+                            || input[i] == 'F' || input[i] == 'f' || input[i] == '.'))
                     {
                         num += input[i];
                         column++;
                         i++;
                     }
-                    if ((num.EndsWith('D') || num.EndsWith('d')) && num.Contains('.'))
+                    if (num.Contains('.'))
                         tokens.Add(new Token(TokenType.Double, num.Replace("D", "").Replace("d", ""), line, column));
-                    else if (num.Contains('.'))
-                        tokens.Add(new Token(TokenType.Double, num, line, column));
                     else if (num.EndsWith('d') || num.EndsWith('D'))
                         tokens.Add(new Token(TokenType.Double, num.Replace("D", "").Replace("d", ""), line, column));
                     else if ((num.EndsWith('F') || num.EndsWith('f')) && num.Contains('.'))
@@ -290,7 +289,12 @@ namespace CSharp_Interpreter.Core
                     tokens.Add(new Token(TokenType.AndAnd, "&&", line, column));
                     i += 2;
                 }
-
+                else if (c == ':')
+                {
+                    column++;
+                    tokens.Add(new Token(TokenType.Colon, ":", line, column));
+                    i++;
+                }
             }
             return tokens;
         }

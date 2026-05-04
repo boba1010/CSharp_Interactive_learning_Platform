@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:CSharp_Interactive_Learning_App.ViewModels"
+             xmlns:models="clr-namespace:CSharp_Interactive_Learning_App.Models"
+             x:Class="CSharp_Interactive_Learning_App.Views.HomePage"
+             x:DataType="viewmodels:BattleViewModel">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style TargetType="Button" x:Key="LessonButton">
+                <Setter Property="CornerRadius" Value="40" />
+                <Setter Property="WidthRequest" Value="80" />
+                <Setter Property="HeightRequest" Value="80" />
+                <Setter Property="BackgroundColor" Value="#303030" />
+                <Style.Triggers>
+                    <Trigger TargetType="Button" Property="IsEnabled" Value="True">
+                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Dark={StaticResource PrimaryDark}, Light={StaticResource Primary}}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid
+        RowDefinitions="Auto, Auto, *"
+        Padding="10">
+        <!-- Title -->
+        <Grid>
+            <Label
+                Grid.ColumnSpan="10">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="&lt;" TextColor="Grey" FontSize="28" />
+                        <Span Text="Codebase" TextColor="RoyalBlue" FontSize="28" />
+                        <Span Text="/>" TextColor="Grey" FontSize="28" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+        </Grid>
+        
+        <!-- Navbar -->
+        <Grid
+            Grid.Row="1" 
+            ColumnDefinitions="Auto, Auto, Auto, Auto, Auto"
+            HorizontalOptions="Center">
+            <Button 
+                Text="Home" 
+                Style="{StaticResource SelectedNavbarButton}" />
+            <Button 
+                Grid.Column="1"
+                Text="Leaderboard" 
+                Clicked="OnLeaderboardButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <Button 
+                Grid.Column="2"
+                Text="Profile" 
+                Clicked="OnProfileButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <Button 
+                Grid.Column="3"
+                Text="Challenges" 
+                Clicked="OnChallengesButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <Button 
+                Grid.Column="4"
+                Text="PlayGround" 
+                Clicked="OnPlayGroundButtonClicked"
+                Style="{StaticResource UnSelectedNavbarButton}" />
+            <BoxView
+                VerticalOptions="End"
+                HeightRequest="1" 
+                Style="{StaticResource SelectedNavbarLine}" />
+            <BoxView
+                Grid.Column="1"
+                VerticalOptions="End"
+                HeightRequest="1" />
+            <BoxView
+                Grid.Column="2"
+                VerticalOptions="End"
+                HeightRequest="1" />
+            <BoxView
+                Grid.Column="3"
+                VerticalOptions="End"
+                HeightRequest="1" />
+            <BoxView
+                Grid.Column="4"
+                VerticalOptions="End"
+                HeightRequest="1" />
+        </Grid>
+        <Border
+            Grid.Row="2"
+            Margin="0, 20, 0, 0"
+            StrokeShape="RoundRectangle 20"
+            Stroke="Transparent"
+            BackgroundColor="Black">
+            <Grid>
+                <Image 
+                    Opacity="0.4"
+                    Source="code3.png" 
+                    Grid.ColumnSpan="4"
+                    Grid.RowSpan="9"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill"
+                    InputTransparent="True" 
+                    Aspect="Fill" />
+                <CollectionView
+                    ItemsSource="{Binding Units}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate
+                            x:DataType="models:Chapter">
+                            <Grid
+                                Padding="30, 30, 0, 0"
+                                RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, auto"
+                                ColumnDefinitions="*, Auto, Auto, *">
+                                <HorizontalStackLayout
+                                    Grid.ColumnSpan="4"
+                                    HorizontalOptions="Center"
+                                    Margin="0, 0, 0, 20">
+                                    <Label
+                                        Text="------------------------"
+                                        TextColor="Gray" />
+                                    <Label
+                                        Text="{Binding Id, StringFormat=' Unit {0}:'}"
+                                        TextColor="Gray" />
+                                    <Label
+                                        Text="{Binding Name, StringFormat=' {0}'}"
+                                        TextColor="Gray" />
+                                    <Label
+                                        Text=" ------------------------"
+                                        TextColor="Gray" />
+                                </HorizontalStackLayout>
+
+                                <Button 
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[0].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[0].Id}" />
+                                <Button 
+                                    Grid.Row="2"
+                                    Grid.Column="2"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[1].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[1].Id}" />
+                                <Button 
+                                    Grid.Row="3"
+                                    Grid.Column="1"
+                                    Margin="20, 0, 0, 0"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[2].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[2].Id}" />
+                                <Button 
+                                    Grid.Row="4"
+                                    Grid.Column="2"
+                                    Margin="0, 0, 10, 0"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[3].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[3].Id}" />
+                                <Button 
+                                    Grid.Row="5"
+                                    Grid.Column="1"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[4].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[4].Id}" />
+                                <Button 
+                                    Grid.Row="6"
+                                    Grid.Column="2"
+                                    Margin="25, 0, 0, 0"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[5].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[5].Id}" />
+                                <Button 
+                                    Grid.Row="7"
+                                    Grid.Column="1"
+                                    Margin="0, 0, 10, 20"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[6].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[6].Id}" />
+                                <Button 
+                                    Grid.Row="8"
+                                    Grid.Column="2"
+                                    Margin="0, 0, 10, 20"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[7].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[7].Id}" />
+                                <Button 
+                                    Grid.Row="9"
+                                    Grid.Column="1"
+                                    Margin="0, 0, 10, 20"
+                                    Style="{StaticResource LessonButton}"
+                                    IsEnabled="{Binding Battles[8].IsUnlocked}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadBattleCommand}"
+                                    CommandParameter="{Binding Battles[8].Id}" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

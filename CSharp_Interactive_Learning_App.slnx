@@ -4,4 +4,7 @@
     <Deploy Solution="Debug|*" />
   </Project>
   <Project Path="CSharp_Interpreter/CSharp_Interpreter.csproj" />
+  <Project Path="DamageCalculator/DamageCalculator.csproj" Id="67a79c17-a7a5-4f75-8d6b-b5cdf2d0efd0" />
+  <Project Path="DamageCalculatorV2/DamageCalculatorV2.csproj" Id="24e79109-9771-4fe9-a541-b252853c0bcf" />
+  <Project Path="TestProject/TestProject.csproj" Id="9773da28-6798-41e8-addd-4be82274ad8f" />
 </Solution>
