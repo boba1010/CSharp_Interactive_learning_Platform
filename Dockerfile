@@ -3,7 +3,7 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet restore CSharp_Interactive_Learning_App.sln
+RUN dotnet restore CSharp_Interactive_Learning_App.API/CSharp_Interactive_Learning_App.API.csproj
 
 RUN dotnet publish CSharp_Interactive_Learning_App.API/CSharp_Interactive_Learning_App.API.csproj -c Release -o /app/out
 
