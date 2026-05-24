@@ -22,6 +22,7 @@ namespace DamageCalculatorV2
 
         private readonly List<string> errMsgs = [];
 
+        private List<DataType> DataTypesUsed = [];
         public CalculationResult Main(string code, int enemiesNumber, int healthPerEnemy, bool isBoss, double dmgMultiplier)
         {
             tokens = Tokenizer.Tokenize(code);
@@ -44,12 +45,15 @@ namespace DamageCalculatorV2
                     break;
             }
 
+            int variableCount = 0;
+
             foreach (StatementNode statement in statements)
             {
                 switch (statement)
                 {
                     case DeclarationNode:
                         totalDamage += 5 * dmgMultiplier;
+                        variableCount++;
                         break;
                     case AssignementNode:
                         totalDamage += 2 * dmgMultiplier;
@@ -108,7 +112,9 @@ namespace DamageCalculatorV2
             {
                 Errors = errMsgs,
                 RemainingEnemies = enemies,
-                SelfDamage = (int)Math.Round(totalSelfDamage)
+                SelfDamage = (int)Math.Round(totalSelfDamage),
+                VariableCount = variableCount,
+                DateTypesUsed = DataTypesUsed
             };
         }
 
@@ -326,6 +332,7 @@ namespace DamageCalculatorV2
                 Value = expr,
             });
 
+            DataTypesUsed.Add(type);
             return new DeclarationNode { Name = name, Type = type, Expression = expr };
         }
 

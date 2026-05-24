@@ -5,16 +5,17 @@ using System.Text.Json;
 
 namespace CSharp_Interactive_Learning_App.Services
 {
-    public class BattleService(HttpClient httpClient)
+    public class BattleService(HttpClient httpClient, ApiClient apiClient)
     {
-        string url = "http://192.168.1.50:5000/api/units";
+        string url = "http://192.168.1.50:5000/api/chapters";
 
-        public async Task<ChaptersRequest?> GetAllUnitsAsync(string token)
+        public async Task<ChaptersRequest?> GetAllChaptersAsync()
         {
             try
             {
-                var jsonString = JsonSerializer.Serialize(token);
-                var result = await httpClient.PostAsync($"{url}", new StringContent(jsonString, Encoding.UTF8, "application/json"));
+                var token = await SecureStorage.GetAsync("Token");
+                httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+                var result = await apiClient.SendAsync(() => httpClient.GetAsync($"{url}"));
 
                 ChaptersRequest? response = await result.Content.ReadFromJsonAsync<ChaptersRequest>();
                 return response;
@@ -30,9 +31,12 @@ namespace CSharp_Interactive_Learning_App.Services
         {
             try
             {
+                var token = await SecureStorage.GetAsync("Token");
+                httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
                 var jsonString = JsonSerializer.Serialize(requestLessonCompletion);
                 var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                var result = await httpClient.PostAsync($"{url}/completeLesson", content);
+                var result = await apiClient.SendAsync(() => httpClient.PostAsync($"{url}/validateBattle", content));
                 if (!result.IsSuccessStatusCode)
                 {
                     await Shell.Current.DisplayAlertAsync("Warning", await result.Content.ReadAsStringAsync(), "OK");
@@ -52,9 +56,12 @@ namespace CSharp_Interactive_Learning_App.Services
         {
             try
             {
+                var token = await SecureStorage.GetAsync("Token");
+                httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
                 var jsonString = JsonSerializer.Serialize(requestBattleStart);
                 var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                var result = await httpClient.PostAsync($"{url}/startBattle", content);
+                var result = await apiClient.SendAsync(() =>  httpClient.PostAsync($"{url}/startBattle", content));
                 if (!result.IsSuccessStatusCode)
                 {
                     await Shell.Current.DisplayAlertAsync("Warning", await result.Content.ReadAsStringAsync(), "OK");
@@ -74,9 +81,12 @@ namespace CSharp_Interactive_Learning_App.Services
         {
             try
             {
+                var token = await SecureStorage.GetAsync("Token");
+                httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
                 string jsonstring = JsonSerializer.Serialize(request);
                 var content = new StringContent(jsonstring, Encoding.UTF8, "application/json");
-                var result = await httpClient.PostAsync($"{url}/endBattle", content);
+                var result = await apiClient.SendAsync(() => httpClient.PostAsync($"{url}/endBattle", content));
                 if (!result.IsSuccessStatusCode)
                 {
                     await Shell.Current.DisplayAlertAsync("Warning", await result.Content.ReadAsStringAsync(), "OK");

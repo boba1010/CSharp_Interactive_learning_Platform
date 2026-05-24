@@ -3,14 +3,14 @@
     public class RequestBattleCompletion
     {
         public int BattleId { get; set; }
-        public string Token { get; set; } = null!;
+        public int ChapterId { get; set; }
         public string Code { get; set; } = null!;
     }
 
     public class RequestBattleStart
     {
-        public string Token { get; set; } = null!;
         public int BattleId { get; set; }
+        public int ChapterId { get; set; }
     }
 
     public class BattleStartResult
@@ -28,7 +28,6 @@
     public class RequestBattleEnd
     {
         public int BattleId { get; set; }
-        public string Token { get; set; } = null!;
     }
 
     public class BattleEndResult
@@ -46,6 +45,8 @@
     public class PreBattleRequest
     {
         public int Id { get; set; }
+        public int ChapterId { get; set; }
+
         public string Name { get; set; } = null!;
         public string Content { get; set; } = null!;
         public string Instructions { get; set; } = null!;

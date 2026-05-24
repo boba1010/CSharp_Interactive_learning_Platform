@@ -20,10 +20,12 @@ namespace CSharp_Interactive_Learning_App
                 });
 
             builder.Services.AddSingleton<UserViewModel>();
+            builder.Services.AddSingleton<HomeViewModel>();
             builder.Services.AddSingleton<BattleViewModel>();
             builder.Services.AddSingleton<UserService>();
             builder.Services.AddSingleton<BattleService>();
             builder.Services.AddSingleton<HttpClient>();
+            builder.Services.AddSingleton<ApiClient>();
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif

@@ -5,9 +5,9 @@ using System.Text.Json;
 
 namespace CSharp_Interactive_Learning_App.Services
 {
-    public class UserService(HttpClient httpClient)
+    public class UserService(HttpClient httpClient, ApiClient apiClient)
     {
-        string url = "http://192.168.1.50:5000/api/user";
+        readonly string url = "http://192.168.1.50:5000/api/user";
 
         public async Task<UserLoginResponse?> LoginAsync(UserLoginRequest request)
         {
@@ -15,7 +15,7 @@ namespace CSharp_Interactive_Learning_App.Services
             {
                 var jsonString = JsonSerializer.Serialize(request);
                 var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                var result = await httpClient.PostAsync($"{url}/login", content);
+                var result = await httpClient.PostAsync($"{url}/auth/login", content);
 
                 UserLoginResponse? response = null;
                 if (!result.IsSuccessStatusCode)
@@ -37,7 +37,7 @@ namespace CSharp_Interactive_Learning_App.Services
             {
                 var jsonString = JsonSerializer.Serialize(request);
                 var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                var result = await httpClient.PostAsync($"{url}/signup", content);
+                var result = await httpClient.PostAsync($"{url}/auth/signup", content);
 
                 UserSignupResponse? response = null;
                 if (!result.IsSuccessStatusCode)
@@ -53,18 +53,18 @@ namespace CSharp_Interactive_Learning_App.Services
             }
         }
 
-        public async Task<bool> VerifyUserAsync(string token)
+        public async Task<bool> VerifyUserAsync()
         {
             try
             {
-                var jsonString = JsonSerializer.Serialize(token);
-                var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                var result = await httpClient.PostAsync($"{url}/verify", content);
-;
-                if (!result.IsSuccessStatusCode)
+                string token = await SecureStorage.GetAsync("Token");
+                if (string.IsNullOrEmpty(token))
                     return false;
-                else
-                    return true;
+                httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+                var result = await apiClient.SendAsync(() => httpClient.GetAsync($"{url}/auth/verify"));
+
+                return result.IsSuccessStatusCode;
             }
             catch
             {

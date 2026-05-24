@@ -6,10 +6,11 @@
              x:Class="CSharp_Interactive_Learning_App.Views.UserViews.ProfilePage"
              x:DataType="viewmodel:UserViewModel">
     <Grid
-        RowDefinitions="Auto, *"
+        RowDefinitions="Auto, Auto, *"
         RowSpacing="10">
         <!-- Navbar -->
         <Grid
+            Grid.Row="1"
             ColumnDefinitions="Auto, Auto, Auto, Auto, Auto"
             HorizontalOptions="Center">
             <Button 
@@ -58,7 +59,7 @@
         </Grid>
         <!-- profile -->
         <ScrollView
-            Grid.Row="1">
+            Grid.Row="2">
             <Grid ColumnDefinitions="*, Auto, *"
                   RowDefinitions="160, Auto, *">
 

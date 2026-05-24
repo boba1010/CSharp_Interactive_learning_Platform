@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="CSharp_Interactive_Learning_App.Views.LeaderboardPage">
+             xmlns:vm="clr-namespace:CSharp_Interactive_Learning_App.ViewModels"
+             x:Class="CSharp_Interactive_Learning_App.Views.LeaderboardPage"
+             x:DataType="vm:HomeViewModel">
     <Grid
         RowDefinitions="Auto, Auto, *"
         Padding="10">
@@ -13,7 +15,7 @@
             HorizontalOptions="Center">
             <Button 
                 Text="Home" 
-                Clicked="OnHomeButtonClicked"
+                Command="{Binding GoToHomeCommand}"
                 Style="{StaticResource UnSelectedNavbarButton}" />
             <Button 
                 Grid.Column="1"
@@ -22,17 +24,17 @@
             <Button 
                 Grid.Column="2"
                 Text="Profile" 
-                Clicked="OnProfileButtonClicked"
+                Command="{Binding GoToProfileCommand}"
                 Style="{StaticResource UnSelectedNavbarButton}" />
             <Button 
                 Grid.Column="3"
                 Text="Challenges" 
-                Clicked="OnChallengesButtonClicked"
+                Command="{Binding GoToChallengesCommand}"
                 Style="{StaticResource UnSelectedNavbarButton}" />
             <Button 
                 Grid.Column="4"
                 Text="PlayGround" 
-                Clicked="OnPlayGroundButtonClicked"
+                Command="{Binding GoToPlayGroundCommand}"
                 Style="{StaticResource UnSelectedNavbarButton}" />
             <BoxView
                 VerticalOptions="End"

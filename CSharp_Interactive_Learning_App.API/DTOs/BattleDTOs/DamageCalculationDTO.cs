@@ -1,4 +1,6 @@
-﻿namespace CSharp_Interactive_Learning_App.API.DTOs.BattleDTOs
+﻿using CSharp_Interactive_Learning_App.API.Models;
+
+namespace CSharp_Interactive_Learning_App.API.DTOs.BattleDTOs
 {
     public class DamageCalculationDTO
     {
@@ -6,5 +8,8 @@
         public List<string> Errors { get; set; } = [];
         public int SelfDamage { get; set; }
         public int TotalXpGained { get; set; }
+
+        public int VariableCount { get; set; }
+        public List<DataType> DateTypesUsed { get; set; } = [];
     }
 }

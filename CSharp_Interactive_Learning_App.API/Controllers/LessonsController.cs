@@ -2,67 +2,59 @@
 using CSharp_Interactive_Learning_App.API.DTOs.BattleDTOs;
 using CSharp_Interactive_Learning_App.API.Models;
 using DamageCalculatorV2;
+//using DamageCalculatorV2.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace CSharp_Interactive_Learning_App.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/chapters")]
     public class LessonsController(AppDbContext dbContext) : ControllerBase
     {
-        [HttpPost]
-        public async Task<IActionResult> GetAllChaptersAsync([FromBody] string token)
+        private int GetUserId()
         {
-            var handler = new JwtSecurityTokenHandler();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                throw new UnauthorizedAccessException();
+            return userId;
+        }
 
-            var validationParams = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = "CSharp_Interactive_Learning_App.API",
+        [HttpGet]
+        public async Task<IActionResult> GetAllChaptersAsync()
+        {
+            int userId = GetUserId();
 
-                ValidateAudience = true,
-                ValidAudience = "CSharp_Interactive_Learning_App",
-
-                ValidateLifetime = true,
-
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("=3cm9d+5r+4=cd4+dc4=dde=dcc23gjjtygv"))
-            };
-
-            var principal = handler.ValidateToken(token, validationParams, out var validatedToken);
-
-            int userId = Convert.ToInt32(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-
-            var chapters = dbContext.Chapters.ToList();
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
-                return BadRequest("User was not found.");
+                return NotFound("User was not found.");
+
+            var chapters = dbContext.Chapters
+                .Include(c => c.Battles)
+                .ToList();
 
             List<ChapterRequest> chaptersRequests = [];
 
             foreach (var chapter in chapters)
             {
                 ObservableCollection<PreBattleRequest> preBattles = [];
-                foreach (var battleId in chapter.LessonIds)
+                foreach (var battle in chapter.Battles)
                 {
-                    var battle = dbContext.Battles.FirstOrDefault(b => b.Id == battleId);
-                    if (battle == null)
-                        break;
                     PreBattleRequest preBattleRequest = new() 
                     { 
                         Content = battle.Content, 
-                        Id = battle.Id, 
+                        Id = battle.Id,
+                        ChapterId = battle.ChapterId,
                         Name = battle.Name, 
                         EnemiesNumber = battle.EnemiesNumber, 
                         HealthPerEnemy = battle.HealthPerEnemy, 
                         Instructions = battle.Instructions 
                     };
-                    if (!user.UnlockedLessonIds.Contains(battleId))
+                    if (!user.UnlockedLessonIds.Contains(battle.Id))
                         preBattleRequest.IsUnlocked = false;
                     else
                         preBattleRequest.IsUnlocked = true;
@@ -79,50 +71,46 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             DmgCalc dmgCalc = new();
             var result = dmgCalc.Main(code, enemiesNumber, healthPerEnemy, isBoss, dmgMultiplier);
 
-            var enemies = new List<EnemyDTO>();
+            List<EnemyDTO> enemies = [];
             foreach (var enemy in result.RemainingEnemies)
                 enemies.Add(new() { Health = enemy.Health });
 
-            return new() { Errors = result.Errors, RemainingEnemies = enemies, SelfDamage = result.SelfDamage, };
+            return new()
+            {
+                Errors = result.Errors,
+                RemainingEnemies = enemies,
+                SelfDamage = result.SelfDamage,
+                //DateTypesUsed = (DataType)result.DateTypesUsed,
+                VariableCount = result.VariableCount
+            };
         }
 
         [HttpPost("startBattle")]
         public async Task<IActionResult> RequestBattleStart([FromBody] RequestBattleStart request)
         {
-            var handler = new JwtSecurityTokenHandler();
-
-            var validationParams = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = "CSharp_Interactive_Learning_App.API",
-
-                ValidateAudience = true,
-                ValidAudience = "CSharp_Interactive_Learning_App",
-
-                ValidateLifetime = true,
-
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("=3cm9d+5r+4=cd4+dc4=dde=dcc23gjjtygv"))
-            };
-
-            var principal = handler.ValidateToken(request.Token, validationParams, out var validatedToken);
-
-            int userId = Convert.ToInt32(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            int userId = GetUserId();
 
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
                 return NotFound("User was not found.");
 
-            var battle = dbContext.Battles.FirstOrDefault(b => b.Id == request.BattleId);
-            if (battle == null)
-                return NotFound("Lesson was not found.");
+            var chapter = dbContext.Chapters
+                .Include(c => c.Battles)
+                .FirstOrDefault(b => b.Id == request.ChapterId);
+            if (chapter == null)
+                return NotFound("Chapter was not found");
 
-            if (dbContext.BattleStates.FirstOrDefault(b => b.UserId == userId) != null)
+            var battle = chapter.Battles
+                .FirstOrDefault(b => b.Id == request.BattleId);
+            if (battle == null)
+                return NotFound("battle was not found.");
+
+            if (dbContext.BattleStates.FirstOrDefault(b => b.UserId == user.Id) != null)
                 return BadRequest("User is already in a battle.");
 
             BattleState battleState = new() 
             { 
-                UserId = userId, 
+                UserId = user.Id, 
                 LessonId = request.BattleId, 
                 IsFinished = false, 
                 Turn = 1, 
@@ -151,37 +139,32 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
         [HttpPost("validateBattle")]
         public async Task<IActionResult> RequestLessonAndBattleCompletion([FromBody] RequestBattleCompletion request)
         {
-            var handler = new JwtSecurityTokenHandler();
-
-            var validationParams = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = "CSharp_Interactive_Learning_App.API",
-
-                ValidateAudience = true,
-                ValidAudience = "CSharp_Interactive_Learning_App",
-
-                ValidateLifetime = true,
-
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("=3cm9d+5r+4=cd4+dc4=dde=dcc23gjjtygv"))
-            };
-
-            var principal = handler.ValidateToken(request.Token, validationParams, out var validatedToken);
-
-            int userId = Convert.ToInt32(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            int userId = GetUserId();
 
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
-                return NotFound("User was not found.");
+                return NotFound("User could not be found.");
 
-            var battleState = dbContext.BattleStates.FirstOrDefault(b => b.UserId == user.Id);
+            var battleState = dbContext.BattleStates
+                .FirstOrDefault(b => b.UserId == user.Id);
             if (battleState == null)
                 return NotFound("Battle session could not be found.");
 
-            var battle = dbContext.Battles.FirstOrDefault(l => l.Id == battleState.LessonId);
+            var chapter = dbContext.Chapters
+                .Include(c => c.Battles)
+                    .ThenInclude(b => b.AllowedTypes)
+                 .Include(c => c.Battles)
+                    .ThenInclude(b => b.RequiredStatements)
+                .Include(c => c.Battles)
+                    .ThenInclude(b => b.AllowedMathOperations)
+                .FirstOrDefault(c => c.Id == request.ChapterId);
+            if (chapter == null)
+                return NotFound("Chapter could not be found");
+
+            var battle = chapter.Battles
+                .FirstOrDefault(l => l.Id == battleState.LessonId);
             if (battle == null)
-                return NotFound("Lesson could not be found.");
+                return NotFound("Battle could not be found.");
 
             DamageCalculationDTO result;
             
@@ -195,10 +178,21 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
                     user.UnlockedLessonIds.Add(battle.Id + 1);
                 }
 
+                int questsXp = 4;
                 int basexp = 15;
                 int xpPerHealth = 2;
                 int xpPerEnemy = 5;
                 int xpGained = basexp + (battle.EnemiesNumber * xpPerEnemy) + (battle.HealthPerEnemy * battle.EnemiesNumber * xpPerHealth);
+
+                foreach (var statement in battle.RequiredStatements)
+                {
+                    if (result.VariableCount == statement.Count && 
+                        statement.AllowedStatementType == StatementType.Variable)
+                    {
+                        xpGained += questsXp;
+                    }
+                }
+
                 user.TotalXp += xpGained;
                 dbContext.Users.Update(user);
 
@@ -221,25 +215,7 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
         [HttpPost("endBattle")]
         public async Task<IActionResult> RequestBattleEnd([FromBody] RequestBattleEnd request)
         {
-            var handler = new JwtSecurityTokenHandler();
-
-            var validationParams = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = "CSharp_Interactive_Learning_App.API",
-
-                ValidateAudience = true,
-                ValidAudience = "CSharp_Interactive_Learning_App",
-
-                ValidateLifetime = true,
-
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("=3cm9d+5r+4=cd4+dc4=dde=dcc23gjjtygv"))
-            };
-
-            var principal = handler.ValidateToken(request.Token, validationParams, out var validatedToken);
-
-            int userId = Convert.ToInt32(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            int userId = GetUserId();
 
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)

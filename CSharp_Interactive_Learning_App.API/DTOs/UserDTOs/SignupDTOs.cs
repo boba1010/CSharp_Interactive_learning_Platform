@@ -4,7 +4,8 @@ namespace CSharp_Interactive_Learning_App.API.DTOs.UserDTOs
 {
     public class UserSignupResponse
     {
-        public User User { get; set; }
+        public UserDTO User { get; set; }
+        public string RefreshToken { get; set; } = null!;
         public string Token { get; set; } = null!;
         public string Feedback { get; set; } = null!;
     }

@@ -11,7 +11,6 @@ namespace CSharp_Interactive_Learning_App.ViewModels
         [ObservableProperty]
         public partial User User { get; set; }
 
-        private string token = "";
         public async Task LoadUserInfo()
         {
             var jsonString = await SecureStorage.GetAsync("UserInfo");
@@ -19,8 +18,6 @@ namespace CSharp_Interactive_Learning_App.ViewModels
                 return;
             var user = JsonSerializer.Deserialize<User>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             User = user;
-
-            token = await SecureStorage.GetAsync("Token");
         }
 
         public async Task LoginAsync(string email, string password)
@@ -42,8 +39,8 @@ namespace CSharp_Interactive_Learning_App.ViewModels
                 await SecureStorage.SetAsync("UserInfo", jsonString);
                 Preferences.Set("IsLoggedIn", true);
                 User = response.User;
-                token = response.Token;
                 await SecureStorage.SetAsync("Token", response.Token);
+                await SecureStorage.SetAsync("RefreshToken", response.RefreshToken);
                 await Shell.Current.GoToAsync("Home");
                 return;
             }
@@ -68,10 +65,13 @@ namespace CSharp_Interactive_Learning_App.ViewModels
                 var jsonString = JsonSerializer.Serialize(response.User);
                 await SecureStorage.SetAsync("UserInfo", jsonString);
                 Preferences.Set("IsLoggedIn", true);
+
                 User = response.User;
-                token = response.Token;
+
                 await SecureStorage.SetAsync("Token", response.Token);
+                await SecureStorage.SetAsync("RefreshToken", response.RefreshToken);
                 await Shell.Current.GoToAsync("Home");
+
                 return;
             }
 
@@ -87,7 +87,7 @@ namespace CSharp_Interactive_Learning_App.ViewModels
                 Preferences.Set("IsLoggedIn", false);
                 return false;
             }
-            bool isVerified = await userService.VerifyUserAsync(token);
+            bool isVerified = await userService.VerifyUserAsync();
             if (isVerified)
             {
                 Preferences.Set("IsLoggedIn", true);

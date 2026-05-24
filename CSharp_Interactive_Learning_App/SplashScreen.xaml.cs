@@ -21,7 +21,6 @@ namespace CSharp_Interactive_Learning_App
 
         private void RenderSplashScreenThenNavigate()
         {
-            // rendering TODO
             var page = Shell.Current.CurrentPage;
             page.Opacity = 1;
             page.FadeToAsync(0);

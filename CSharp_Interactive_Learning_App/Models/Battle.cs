@@ -3,6 +3,8 @@
     public class Battle
     {
         public int Id { get; set; }
+        public int ChapterId { get; set; }
+
         public string Name { get; set; } = null!;
         public bool IsUnlocked { get; set; }
         public string Content { get; set; } = null!;

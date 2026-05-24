@@ -1,10 +1,8 @@
-﻿using CSharp_Interactive_Learning_App.API.Models;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace CSharp_Interactive_Learning_App.API.Services
 {
@@ -18,7 +16,7 @@ namespace CSharp_Interactive_Learning_App.API.Services
 
         public byte[] GenerateSalt()
         {
-            byte[] salt = new byte[128 / 8];
+            byte[] salt = new byte[16];
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(salt);
@@ -38,27 +36,34 @@ namespace CSharp_Interactive_Learning_App.API.Services
 
         public bool VerifyPassword(string password, string hashed, byte[] salt)
         {
-            return HashPassword(password, salt) == hashed;
+            return CryptographicOperations.FixedTimeEquals(
+                Convert.FromBase64String(HashPassword(password, salt)),
+                Convert.FromBase64String(hashed)
+            );
         }
 
         public string GenerateJwtToken(int userId, string email, string role)
         {
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Role, role),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Token.Key));
+            var b64Key = Environment.GetEnvironmentVariable("JWT_KEY")!;
+            var key = new SymmetricSecurityKey(Convert.FromBase64String(b64Key));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            var minutes = int.TryParse(_config["Jwt:ExpireMinutes"], out int m) ? m : 30; 
+
             var token = new JwtSecurityToken(
-                issuer: Token.Issuer,
-                audience: Token.Audience,
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Token.ExpireMinutes),
+                expires: DateTime.UtcNow.AddMinutes(minutes),
                 signingCredentials: creds);
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

@@ -2,12 +2,11 @@
 using CSharp_Interactive_Learning_App.API.DTOs.UserDTOs;
 using CSharp_Interactive_Learning_App.API.Models;
 using CSharp_Interactive_Learning_App.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+using System.Security.Cryptography;
 
 namespace CSharp_Interactive_Learning_App.API.Controllers
 {
@@ -15,28 +14,21 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
     [Route("api/user")]
     public class UserController(AppDbContext dbContext, AuthService authService) : ControllerBase
     {
-        [HttpPost("verify")]
-        public async Task<IActionResult> VerifyUser([FromBody] string token)
+        private int GetUserId()
         {
-            var handler = new JwtSecurityTokenHandler();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                throw new UnauthorizedAccessException();
+            return userId;
+        }
 
-            var validationParams = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = "CSharp_Interactive_Learning_App.API",
-
-                ValidateAudience = true,
-                ValidAudience = "CSharp_Interactive_Learning_App",
-
-                ValidateLifetime = true,
-
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("=3cm9d+5r+4=cd4+dc4=dde=dcc23gjjtygv"))
-            };
-
-            var principal = handler.ValidateToken(token, validationParams, out var validatedToken);
-
-            int userId = Convert.ToInt32(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        [Authorize]
+        [HttpGet("auth/verify")]
+        public async Task<IActionResult> VerifyUser()
+        {
+            Console.WriteLine(User.Identity?.IsAuthenticated);
+            Console.WriteLine(User.Identity?.AuthenticationType);
+            int userId = GetUserId();
 
             User? user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
@@ -44,7 +36,7 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             return Ok();
         }
 
-        [HttpPost("login")]
+        [HttpPost("auth/login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
         {
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -57,11 +49,32 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
                 return Unauthorized("Wrong password.");
 
             var token = authService.GenerateJwtToken(user.Id, user.Email, "student");
-            
-            return Ok(new UserLoginResponse { Token = token, User = user });
+
+            var newRefreshToken = new RefreshToken()
+            {
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false,
+                UserId = user.Id,
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+            };
+
+            var userDTO = new UserDTO
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                TotalXp = user.TotalXp,
+                Username = user.Username,
+                CurrentLevel = user.CurrentLevel,
+                UnlockedLessonIds = user.UnlockedLessonIds,
+                CompletedLessonIds = user.CompletedLessonIds
+            };
+
+            return Ok(new UserLoginResponse { Token = token, User = userDTO, RefreshToken = newRefreshToken.Token });
         }
 
-        [HttpPost("signup")]
+        [HttpPost("auth/signup")]
         public async Task<IActionResult> Signup([FromBody] UserSignupRequest request)
         {
             if (dbContext.Users.Any(u => u.Email == request.Email || u.Username == request.Username))
@@ -75,12 +88,72 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
 
             var user = new User { Email = request.Email, Password = hashPassword, Salt = salt, Username = request.Username, FullName = request.FullName };
 
+            var newRefreshToken = new RefreshToken()
+            {
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false,
+                UserId = user.Id,
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+            };
+
+            dbContext.RefreshTokens.Add(newRefreshToken);
             dbContext.Users.Add(user);
             await dbContext.SaveChangesAsync();
 
             var userToken = dbContext.Users.FirstOrDefault(u => u.Email == request.Email);
             var token = authService.GenerateJwtToken(userToken.Id, request.Email, "student");
-            return Ok(new UserSignupResponse { User = user, Token = token });
+
+            var userDTO = new UserDTO
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                TotalXp = user.TotalXp,
+                Username = user.Username,
+                CurrentLevel = user.CurrentLevel,
+                UnlockedLessonIds = user.UnlockedLessonIds,
+                CompletedLessonIds = user.CompletedLessonIds
+            };
+
+            return Ok(new UserSignupResponse { User = userDTO, Token = token, RefreshToken = newRefreshToken.Token });
+        }
+
+        [HttpPost("auth/refresh")]
+        public async Task<IActionResult> RefreshSession([FromBody] RefreshTokenRequest request)
+        {
+            var refreshToken = dbContext.RefreshTokens.FirstOrDefault(x => x.Token == x.Token);
+            if (refreshToken == null)
+                return Unauthorized();
+
+            if (refreshToken.ExpiresAt <= DateTime.UtcNow
+                || refreshToken.IsRevoked)
+                return Unauthorized();
+
+            var user = dbContext.Users.FirstOrDefault(u => u.Id == refreshToken.UserId);
+            if (user == null)
+                return Unauthorized();
+
+            var accessToken = authService.GenerateJwtToken(user.Id, user.Email, "student");
+            var newRefreshToken = new RefreshToken()
+            {
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false,
+                UserId = user.Id,
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+            };
+
+            refreshToken.IsRevoked = true;
+            dbContext.RefreshTokens.Update(refreshToken);
+            dbContext.RefreshTokens.Add(newRefreshToken);
+            await dbContext.SaveChangesAsync();
+
+            return Ok(new RefreshTokenResponse()
+            {
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken.Token
+            });
         }
     }
 }

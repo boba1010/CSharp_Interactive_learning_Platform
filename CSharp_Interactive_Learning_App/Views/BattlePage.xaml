@@ -2,8 +2,13 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:CSharp_Interactive_Learning_App.ViewModels"
+             xmlns:convertors="clr-namespace:CSharp_Interactive_Learning_App.Convertors"
              x:Class="CSharp_Interactive_Learning_App.Views.BattlePage"
              x:DataType="viewmodels:BattleViewModel">
+    <ContentPage.Resources>
+        <convertors:VictoryConvertor x:Key="VictoryConvertor" />
+    </ContentPage.Resources>
+    
     <Grid
         RowDefinitions="Auto, *">
         <Grid
@@ -15,7 +20,7 @@
                     TextColor="Grey"
                     FontSize="16"
                     Padding="0" 
-                    Clicked="OnForceExitButtonClicked" />
+                    Command="{Binding RequestBattleEndCommand}" />
             <ProgressBar 
                 Grid.Column="1"
                 Progress="0.2" />
@@ -57,21 +62,22 @@
                     ColumnDefinitions="*, auto">
                     <Editor     
                         AutoSize="TextChanges"
-                        x:Name="CodeArea"
                         IsSpellCheckEnabled="False"
-                        IsTextPredictionEnabled="False" />
+                        IsTextPredictionEnabled="False" 
+                        Text="{Binding Code}" />
                     <Button 
                         Grid.Column="1"
                         Text="Run Your Code" 
-                        Clicked="OnRunCodeClicked" />
+                        Command="{Binding RequestLessonCompletionCommand}" />
                 </Grid>
             </Border>
         </Grid>
         <Grid
+            Grid.RowSpan="2"
             ColumnDefinitions="*, *, *"
             RowDefinitions="*, auto, auto, auto, *"
             ColumnSpacing="10"
-            IsVisible="{Binding IsBattleOver}"
+            IsVisible="{Binding Result, Converter={StaticResource VictoryConvertor}}"
             BackgroundColor="#1c1c1c"
             Padding="10">
             <Label 
@@ -98,19 +104,19 @@
                 Grid.Row="4"
                 Text="Return"
                 VerticalOptions="End" 
-                Clicked="OnReturnButtonClicked" />
+                Command="{Binding ReturnCommand}" />
             <Button 
                 Grid.Row="4"
                 Text="Retry" 
                 Grid.Column="1"
                 VerticalOptions="End" 
-                Clicked="OnRetryButtonClicked" />
+                Command="{Binding RetryCommand}" />
             <Button
                 Grid.Row="4"
                 Text="Next" 
                 Grid.Column="2"
                 VerticalOptions="End" 
-                Clicked="OnNextButtonClicked" />
+                Command="{Binding NextCommand}" />
         </Grid>
     </Grid>
 </ContentPage>

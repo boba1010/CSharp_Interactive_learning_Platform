@@ -9,6 +9,7 @@ namespace CSharp_Interactive_Learning_App.DTOs.UserDTOs
     {
         public User User { get; set; }
         public string Token { get; set; } = null!;
+        public string RefreshToken { get; set; } = null!;
         public string Feedback { get; set; } = null!;
     }
     public class UserSignupRequest
