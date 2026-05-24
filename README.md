@@ -13,11 +13,11 @@ Codebase is a gamified learning platform designed to teach programming using C#.
   - Variables, loops, conditions, and functions
   - Basic problem-solving exercises
 
-- **Intermediate Module**
+- **(Will be added in the future)Intermediate Module**
   - Algorithmic thinking and problem-solving challenges
   - Practice with structured programming concepts
 
-- **Advanced Module**
+- **(Will be added in the future)Advanced Module**
   - Introduction to lexing (tokenization)
   - Abstract Syntax Trees (AST)
   - Building a simple transpiler from a custom language into C#
