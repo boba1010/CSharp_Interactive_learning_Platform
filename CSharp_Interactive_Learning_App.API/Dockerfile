@@ -1,13 +1,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-COPY *.csproj ./
-RUN dotnet restore
+COPY . .
 
-COPY . ./
-RUN dotnet publish -c Release -o out
+RUN dotnet restore CSharp_Interactive_Learning_App.sln
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+RUN dotnet publish CSharp_Interactive_Learning_App.API/CSharp_Interactive_Learning_App.API.csproj -c Release -o /app/out
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
 COPY --from=build /app/out .
