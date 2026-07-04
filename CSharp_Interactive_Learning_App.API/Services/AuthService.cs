@@ -57,7 +57,7 @@ namespace CSharp_Interactive_Learning_App.API.Services
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var minutes = int.TryParse(_config["Jwt:ExpireMinutes"], out int m) ? m : 30; 
+            var minutes = int.TryParse(_config["Jwt:ExpireMinutes"], out int m) ? m : 10; 
 
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],

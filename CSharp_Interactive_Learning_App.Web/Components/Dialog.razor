@@ -1,0 +1,77 @@
+﻿@if (IsOpen)
+{
+    <div class="winui-dialog-overlay">
+        <div class="winui-dialog-card" role="dialog" aria-modal="true">
+            
+            <div class="winui-dialog-header">
+                <h2 class="winui-dialog-title">@Title</h2>
+            </div>
+
+            <div class="winui-dialog-body">
+                @ChildContent
+            </div>
+
+            <div class="winui-dialog-footer">
+                @if (!string.IsNullOrEmpty(PrimaryButtonText))
+                {
+                    <button class="winui-btn winui-btn-primary" @onclick="OnPrimaryClick">
+                        @PrimaryButtonText
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(SecondaryButtonText))
+                {
+                    <button class="winui-btn" @onclick="OnSecondaryClick">
+                        @SecondaryButtonText
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(CloseButtonText))
+                {
+                    <button class="winui-btn" @onclick="OnCloseClick">
+                        @CloseButtonText
+                    </button>
+                }
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+    
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? PrimaryButtonText { get; set; }
+    [Parameter] public string? SecondaryButtonText { get; set; }
+    [Parameter] public string? CloseButtonText { get; set; }
+
+    [Parameter] public EventCallback OnPrimaryButtonClick { get; set; }
+    [Parameter] public EventCallback OnSecondaryButtonClick { get; set; }
+    [Parameter] public EventCallback OnCloseButtonClick { get; set; }
+
+    private async Task CloseDialog()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task OnPrimaryClick()
+    {
+        await OnPrimaryButtonClick.InvokeAsync();
+        await CloseDialog();
+    }
+
+    private async Task OnSecondaryClick()
+    {
+        await OnSecondaryButtonClick.InvokeAsync();
+        await CloseDialog();
+    }
+
+    private async Task OnCloseClick()
+    {
+        await OnCloseButtonClick.InvokeAsync();
+        await CloseDialog();
+    }
+}

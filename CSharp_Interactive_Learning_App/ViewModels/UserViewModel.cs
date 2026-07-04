@@ -1,15 +1,21 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CSharp_Interactive_Learning_App.DTOs.UserDTOs;
-using CSharp_Interactive_Learning_App.Models;
-using CSharp_Interactive_Learning_App.Services;
+using CSharp_Interactive_Learning_App.Shared.DTOs;
+using CSharp_Interactive_Learning_App.Shared.Models;
+using CSharp_Interactive_Learning_App.Shared.Services;
 using System.Text.Json;
+using CSharp_Interactive_Learning_App.Shared.Contracts.Requests;
 
 namespace CSharp_Interactive_Learning_App.ViewModels
 {
-    public partial class UserViewModel(UserService userService) : ObservableObject
+    public partial class UserViewModel(IAuthService authService) : ObservableObject
     {
         [ObservableProperty]
         public partial User User { get; set; }
+
+        [ObservableProperty]
+        public partial string ErrorMsg { get; set; }
+
+        public bool IsLoggedIn { get; set; }
 
         public async Task LoadUserInfo()
         {
@@ -20,62 +26,73 @@ namespace CSharp_Interactive_Learning_App.ViewModels
             User = user;
         }
 
+        private static User MapUser(UserDTO userDTO)
+        {
+            return new User
+            {
+                Id = userDTO.Id,
+                FullName = userDTO.FullName,
+                Email = userDTO.Email,
+                Username = userDTO.Username,
+                CurrentLevel = userDTO.CurrentLevel,
+                TotalXp = userDTO.TotalXp,
+                CompletedLessonIds = userDTO.CompletedLessonIds,
+                UnlockedLessonIds = userDTO.UnlockedLessonIds,
+            };
+        }
+
         public async Task LoginAsync(string email, string password)
         {
             var request = new UserLoginRequest { Email = email, Password = password };
 
-            var response = await userService.LoginAsync(request);
-            if (response == null)
+            Preferences.Set("ErrorMsg", null);
+
+            var response = await authService.LoginAsync(request);
+            if (!response.IsSuccess)
             {
-                await Shell.Current.DisplayAlertAsync("Error!", "Something went wrong.", "OK");
+                ErrorMsg = response.ErrorMessage;
                 return;
             }
 
-            // server will return null if the user is logged in successfully
-            if (response.Feedback == null)
-            {
-                Preferences.Set("ErrorMsg", null);
-                var jsonString = JsonSerializer.Serialize(response.User);
-                await SecureStorage.SetAsync("UserInfo", jsonString);
-                Preferences.Set("IsLoggedIn", true);
-                User = response.User;
-                await SecureStorage.SetAsync("Token", response.Token);
-                await SecureStorage.SetAsync("RefreshToken", response.RefreshToken);
-                await Shell.Current.GoToAsync("Home");
-                return;
-            }
+            var result = response.Data;
 
-            Preferences.Set("ErrorMsg", response.Feedback);
+            var jsonString = JsonSerializer.Serialize(result.User);
+            await SecureStorage.SetAsync("UserInfo", jsonString);
+
+            IsLoggedIn = true;
+
+            User = MapUser(result.User);
+
+            await SecureStorage.SetAsync("Token", result.Token);
+            await SecureStorage.SetAsync("RefreshToken", result.RefreshToken);
+
+            await Shell.Current.GoToAsync("Home");
         }
 
         public async Task SignupAsync(string fullName, string username, string email, string password)
         {
             var request = new UserSignupRequest { Email = email, Password =  password, Username = username, FullName = fullName };
 
-            var response = await userService.SignupAsync(request);
-            if (response == null)
+            var response = await authService.SignupAsync(request);
+            if (!response.IsSuccess)
             {
-                await Shell.Current.DisplayAlertAsync("Error!", "Something went wrong.", "OK");
+                ErrorMsg = response.ErrorMessage;
                 return;
             }
 
-            if (response.Feedback == null)
-            {
-                Preferences.Set("ErrorMsg", null);
-                var jsonString = JsonSerializer.Serialize(response.User);
-                await SecureStorage.SetAsync("UserInfo", jsonString);
-                Preferences.Set("IsLoggedIn", true);
+            var result = response.Data;
 
-                User = response.User;
+            var jsonString = JsonSerializer.Serialize(result.User);
+            await SecureStorage.SetAsync("UserInfo", jsonString);
 
-                await SecureStorage.SetAsync("Token", response.Token);
-                await SecureStorage.SetAsync("RefreshToken", response.RefreshToken);
-                await Shell.Current.GoToAsync("Home");
+            IsLoggedIn = true;
 
-                return;
-            }
+            User = MapUser(result.User);
 
-            Preferences.Set("ErrorMsg", response.Feedback);
+            await SecureStorage.SetAsync("Token", result.Token);
+            await SecureStorage.SetAsync("RefreshToken", result.RefreshToken);
+
+            await Shell.Current.GoToAsync("Home");
         }
 
 
@@ -87,16 +104,18 @@ namespace CSharp_Interactive_Learning_App.ViewModels
                 Preferences.Set("IsLoggedIn", false);
                 return false;
             }
-            bool isVerified = await userService.VerifyUserAsync();
+            var response = await authService.VerifyUserAsync();
+
+            bool isVerified = response.Data;
             if (isVerified)
             {
-                Preferences.Set("IsLoggedIn", true);
-                return true;
+                IsLoggedIn = true;
+                return IsLoggedIn;
             }
             else
             {
-                Preferences.Set("IsLoggedIn", false);
-                return false;
+                IsLoggedIn = false;
+                return IsLoggedIn;
             }
         }
     }

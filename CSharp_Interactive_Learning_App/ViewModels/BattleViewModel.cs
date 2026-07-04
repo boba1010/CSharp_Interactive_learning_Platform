@@ -1,14 +1,13 @@
-﻿using CommunityToolkit.Maui.Core.Extensions;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CSharp_Interactive_Learning_App.DTOs.BattleDTOs;
-using CSharp_Interactive_Learning_App.Models;
-using CSharp_Interactive_Learning_App.Services;
+using CSharp_Interactive_Learning_App.Shared.Services;
+using CSharp_Interactive_Learning_App.Shared.Contracts.Requests;
+using CSharp_Interactive_Learning_App.Shared.Models;
 using System.Collections.ObjectModel;
 
 namespace CSharp_Interactive_Learning_App.ViewModels
 {
-    public partial class BattleViewModel(BattleService battleService) : ObservableObject
+    public partial class BattleViewModel(IBattleService battleService) : ObservableObject
     {
         public ObservableCollection<Chapter> Chapters { get; set; } = [];
 
@@ -41,7 +40,7 @@ namespace CSharp_Interactive_Learning_App.ViewModels
         private BattleState _state;
 
         [ObservableProperty]
-        public partial Models.BattleResult Result { get; set; }
+        public partial Shared.Models.BattleResult Result { get; set; }
 
         [ObservableProperty]
         public partial int PlayerHealth { get; set; }
@@ -53,9 +52,14 @@ namespace CSharp_Interactive_Learning_App.ViewModels
         {
             Chapters.Clear();
             var response = await battleService.GetAllChaptersAsync();
-            if (response == null)
+            if (!response.IsSuccess)
+            {
+                await Shell.Current.DisplayAlertAsync("Error", response.ErrorMessage, "OK");
                 return;
-            foreach (var chapter in response.Chapters)
+            }
+
+            var chapters = response.Data;
+            foreach (var chapter in chapters)
             {
                 List<Battle> battles = [];
                 foreach (var battle in chapter.Battles)
@@ -72,29 +76,31 @@ namespace CSharp_Interactive_Learning_App.ViewModels
                         Name = battle.Name,
                     });
                 }
-                Chapters.Add(new() { Id = chapter.Id, Battles = battles.ToObservableCollection(), Name = chapter.Name });
+                Chapters.Add(new() { Id = chapter.Id, Battles = battles, Name = chapter.Name });
             }
         }
 
         [RelayCommand]
         public async Task RequestLessonCompletion()
         {
-            if (_state != BattleState.Running)
+            if (_state != BattleState.Running && Result != Shared.Models.BattleResult.None)
                 return;
 
-            var result = await battleService.RequestLessonAndBattleCompletionAsync(new() 
+            var response = await battleService.ValidateBattleAsync(new() 
             { 
                 BattleId = Battle.Id,
                 ChapterId = Battle.ChapterId,
                 Code = Code,
             });
-            if (!result.IsSuccess)
+            if (!response.IsSuccess)
             {
                 await Shell.Current.GoToAsync("///SplashScreen/Home");
                 return;
             }
 
-            TotalXpGained = result.CalculationResult.TotalXpGained;
+            var result = response.Data;
+
+            TotalXpGained = result.TotalXpGained;
 
             EnemiesNumber = result.CalculationResult.RemainingEnemies.Count;
 
@@ -102,14 +108,14 @@ namespace CSharp_Interactive_Learning_App.ViewModels
             int damage = EnemiesHealth - CurrentEnemiesHealth;
             TotalDamageDealt = damage;
 
-            TotalSelfDamage = result.CalculationResult.SelfDamage;
+            TotalSelfDamage = result.CalculationResult.DamageTaken;
 
             PlayerHealth -= TotalSelfDamage;
 
             if (result.IsOver)
             {
                 _state = BattleState.Finished;
-                Result = PlayerHealth <= 0 ? Models.BattleResult.Defeat : Models.BattleResult.Victory; 
+                Result = PlayerHealth <= 0 ? Shared.Models.BattleResult.Defeat : Shared.Models.BattleResult.Victory; 
             }
             if (result.CalculationResult.Errors.Count != 0)
                 await Shell.Current.DisplayAlertAsync("Your errors:", string.Join('\n', result.CalculationResult.Errors), "OK");
@@ -117,11 +123,20 @@ namespace CSharp_Interactive_Learning_App.ViewModels
 
         public async Task RequestBattleStartAsync(int battleId)
         {
+            Code = "";
+
             if (_state == BattleState.Running)
                 return;
 
-            var result = await battleService.RequestBattleStartAsync(new() { BattleId = battleId, ChapterId = Battle.ChapterId });
+            var response = await battleService.StartBattleAsync(new() { BattleId = battleId, ChapterId = Battle.ChapterId });
 
+            if (!response.IsSuccess)
+            {
+                await Shell.Current.DisplayAlertAsync("Error", response.ErrorMessage, "OK");
+                return;
+            }
+
+            var result = response.Data;
             if (Battle == null)
             {
                 await Shell.Current.DisplayAlertAsync("Warning", "Battle could not be found.", "OK");
@@ -137,47 +152,58 @@ namespace CSharp_Interactive_Learning_App.ViewModels
             await Shell.Current.DisplayAlertAsync($"PREPARE FOR! {Battle.Name}", Battle.Content, "Continue");
             await Shell.Current.DisplayAlertAsync($"INSTRUCTIONS", Battle.Instructions, "START THE FIGHT");
             _state = BattleState.Running;
+            Result = Shared.Models.BattleResult.None;
         }
 
         [RelayCommand]
         public async Task RequestBattleEndAsync()
         {
+            Code = "";
             if (_state != BattleState.Running)
                 return;
 
-            var request = new RequestBattleEnd { BattleId = Battle.Id,};
-            var result = battleService.RequestBattleEndAsync(request);
+            var request = new RequestBattleEnd { BattleSessionId = Battle.Id,};
+            var result = battleService.EndBattleAsync(request);
             _state = BattleState.Finished;
+            Result = Shared.Models.BattleResult.None;
             await Shell.Current.GoToAsync("..");
         }
 
         [RelayCommand]
         public async Task LoadBattleAsync(Battle battle)
         {
+            Code = "";
+            _state = BattleState.Idle;
+            Result = Shared.Models.BattleResult.None;
             Battle = battle;
             await Shell.Current.GoToAsync($"Battle?BattleId={battle.Id}");
-            _state = BattleState.Idle;
         }
 
         [RelayCommand]
         public async Task ReturnAsync()
         {
-            await Shell.Current.GoToAsync("..");
+            Code = "";
             _state = BattleState.Idle;
+            Result = Shared.Models.BattleResult.None;
+            await Shell.Current.GoToAsync("..");
         }
 
         [RelayCommand]
         public async Task NextAsync()
         {
-            await Shell.Current.GoToAsync($"Battle?BattleId={Battle.Id + 1}");
+            Code = "";
             _state = BattleState.Idle;
+            Result = Shared.Models.BattleResult.None;
+            await Shell.Current.GoToAsync($"Battle?BattleId={Battle.Id + 1}");
         }
 
         [RelayCommand]
         public async Task RetryAsync()
         {
-            await Shell.Current.GoToAsync($"Battle?BattleId={Battle.Id}");
+            Code = "";
             _state = BattleState.Idle;
+            Result = Shared.Models.BattleResult.None;
+            await Shell.Current.GoToAsync($"Battle?BattleId={Battle.Id}");
         }
 
         [RelayCommand]

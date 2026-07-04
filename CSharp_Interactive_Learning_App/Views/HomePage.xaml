@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:CSharp_Interactive_Learning_App.ViewModels"
-             xmlns:models="clr-namespace:CSharp_Interactive_Learning_App.Models"
+             xmlns:models="clr-namespace:CSharp_Interactive_Learning_App.Shared.Models;assembly=CSharp_Interactive_Learning_App.Shared"
              x:Class="CSharp_Interactive_Learning_App.Views.HomePage"
              x:DataType="viewmodels:BattleViewModel">
 

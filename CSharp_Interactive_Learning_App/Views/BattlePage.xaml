@@ -67,7 +67,7 @@
                         Text="{Binding Code}" />
                     <Button 
                         Grid.Column="1"
-                        Text="Run Your Code" 
+                        Text="Check Code" 
                         Command="{Binding RequestLessonCompletionCommand}" />
                 </Grid>
             </Border>

@@ -1,0 +1,99 @@
+﻿@page "/"
+@using CSharp_Interactive_Learning_App.Shared.Services
+@using CSharp_Interactive_Learning_App.Shared.Models
+@inject IAuthService AuthService
+@inject IBattleService BattleService
+@inject NavigationManager Nav
+
+<PageTitle>Home -- CodeBase</PageTitle>
+
+<div class="main">
+    <img class="bg" src="/code3.png" />
+
+    <div class="content">
+        @foreach (var chapter in chapters)
+        {
+            <section class="chapter">
+                <p class="header">@chapter.Name</p>
+                <!-- battle entry buttons -->
+                <button class="battle-btn1 battle-right"
+                        disabled="@(!chapter.Battles[0].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[0].Id, chapter.Id)"></button>
+
+                <button class="battle-btn2 battle-left"
+                        disabled="@(!chapter.Battles[1].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[1].Id, chapter.Id)"></button>
+
+                <button class="battle-btn3 battle-right"
+                        disabled="@(!chapter.Battles[2].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[2].Id, chapter.Id)"></button>
+
+                <button class="battle-btn4 battle-left"
+                        disabled="@(!chapter.Battles[3].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[3].Id, chapter.Id)"></button>
+
+                <button class="battle-btn5 battle-right"
+                        disabled="@(!chapter.Battles[4].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[4].Id, chapter.Id)"></button>
+
+                <button class="battle-btn6 battle-left"
+                        disabled="@(!chapter.Battles[5].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[5].Id, chapter.Id)"></button>
+
+                <button class="battle-btn7 battle-right"
+                        disabled="@(!chapter.Battles[6].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[6].Id, chapter.Id)"></button>
+
+                <button class="battle-btn8 battle-left"
+                        disabled="@(!chapter.Battles[7].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[7].Id, chapter.Id)"></button>
+
+                <button class="battle-btn9 battle-right"
+                        disabled="@(!chapter.Battles[8].IsUnlocked)"
+                        @onclick="() => OnBattleClick(chapter.Battles[8].Id, chapter.Id)"></button>
+
+            </section>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(errorMsg))
+    {
+        <p>@errorMsg</p>        
+    }
+</div>
+
+@code {
+    string? errorMsg;
+    List<Chapter> chapters = [];
+
+    private void OnBattleClick(int battleId, int chapterId)
+    {
+        Nav.NavigateTo($"/battle?id={battleId}&chapterId={chapterId}");
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RendererInfo.IsInteractive) 
+            return;
+
+        var authResult = await AuthService.VerifyUserAsync();
+        var isAuthenticated = authResult.Data;
+        if (!isAuthenticated)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        var chapterResult = await BattleService.GetAllChaptersAsync();
+        chapters = chapterResult?.Data;
+
+        if (chapterResult?.StatusCode == System.Net.HttpStatusCode.Unauthorized || 
+            chapterResult?.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+        else
+            errorMsg = chapterResult?.ErrorMessage;
+    }
+}

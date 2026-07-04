@@ -1,12 +1,12 @@
 ﻿using CSharp_Interactive_Learning_App.API.DbContexts;
-using CSharp_Interactive_Learning_App.API.DTOs.BattleDTOs;
 using CSharp_Interactive_Learning_App.API.Models;
+using CSharp_Interactive_Learning_App.Shared.Contracts.Requests;
+using CSharp_Interactive_Learning_App.Shared.Contracts.Responses;
+using CSharp_Interactive_Learning_App.Shared.DTOs;
 using DamageCalculatorV2;
-//using DamageCalculatorV2.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.ObjectModel;
 using System.Security.Claims;
 
 namespace CSharp_Interactive_Learning_App.API.Controllers
@@ -24,35 +24,23 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             return userId;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllChaptersAsync()
+        private List<ChapterDTO> MapChapters(List<Chapter> chapters, User user)
         {
-            int userId = GetUserId();
-
-            var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
-            if (user == null)
-                return NotFound("User was not found.");
-
-            var chapters = dbContext.Chapters
-                .Include(c => c.Battles)
-                .ToList();
-
-            List<ChapterRequest> chaptersRequests = [];
-
+            List<ChapterDTO> chaptersRequests = [];
             foreach (var chapter in chapters)
             {
-                ObservableCollection<PreBattleRequest> preBattles = [];
+                List<BattleDTO> preBattles = [];
                 foreach (var battle in chapter.Battles)
                 {
-                    PreBattleRequest preBattleRequest = new() 
-                    { 
-                        Content = battle.Content, 
+                    BattleDTO preBattleRequest = new()
+                    {
+                        Content = battle.Content,
                         Id = battle.Id,
                         ChapterId = battle.ChapterId,
-                        Name = battle.Name, 
-                        EnemiesNumber = battle.EnemiesNumber, 
-                        HealthPerEnemy = battle.HealthPerEnemy, 
-                        Instructions = battle.Instructions 
+                        Name = battle.Name,
+                        EnemiesNumber = battle.EnemiesNumber,
+                        HealthPerEnemy = battle.HealthPerEnemy,
+                        Instructions = battle.Instructions
                     };
                     if (!user.UnlockedLessonIds.Contains(battle.Id))
                         preBattleRequest.IsUnlocked = false;
@@ -62,8 +50,69 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
                 }
                 chaptersRequests.Add(new() { Id = chapter.Id, Battles = preBattles, Name = chapter.Name });
             }
+            return chaptersRequests;
+        }
 
-            return Ok(new ChaptersRequest { Chapters = chaptersRequests });
+        private BattleDTO MapBattle(Battle battle, User user)
+        {
+            if (user.UnlockedLessonIds.Contains(battle.Id))
+            {
+                BattleDTO BattleDTO = new()
+                {
+                    Content = battle.Content,
+                    Id = battle.Id,
+                    ChapterId = battle.ChapterId,
+                    Name = battle.Name,
+                    EnemiesNumber = battle.EnemiesNumber,
+                    HealthPerEnemy = battle.HealthPerEnemy,
+                    Instructions = battle.Instructions
+                };
+                return BattleDTO;
+            }
+            return null;
+        }
+        
+        [HttpGet("battlebyid")]
+        public async Task<IActionResult> GetBattleById([FromQuery] int battleId, [FromQuery] int chapterId)
+        {
+            int userId = GetUserId();
+
+            var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+                return Forbid();
+
+            var chapter = dbContext.Chapters
+                .Include(c => c.Battles)
+                .FirstOrDefault(c => c.Id == chapterId);
+            if (chapter == null)
+                return NotFound("Chapter was not found");
+
+            var battle = chapter.Battles
+                .FirstOrDefault(b => b.Id == battleId);
+            if (battle == null)
+                return NotFound("Battle was not found");
+            
+
+            var battleDTO = MapBattle(battle, user);
+            return Ok(battleDTO);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllChaptersAsync()
+        {
+            int userId = GetUserId();
+
+            var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+                return Forbid();
+
+            var chapters = dbContext.Chapters
+                .Include(c => c.Battles)
+                .ToList();
+
+            var chaptersRequests = MapChapters(chapters, user);
+
+            return Ok(new ChaptersDTO { Chapters = chaptersRequests });
         }
 
         private DamageCalculationDTO GetCalculationResult(string code, bool isBoss, int enemiesNumber, int healthPerEnemy, double dmgMultiplier)
@@ -79,7 +128,7 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             {
                 Errors = result.Errors,
                 RemainingEnemies = enemies,
-                SelfDamage = result.SelfDamage,
+                DamageTaken = result.SelfDamage,
                 //DateTypesUsed = (DataType)result.DateTypesUsed,
                 VariableCount = result.VariableCount
             };
@@ -92,7 +141,7 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
 
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
-                return NotFound("User was not found.");
+                return Forbid();
 
             var chapter = dbContext.Chapters
                 .Include(c => c.Battles)
@@ -105,7 +154,7 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             if (battle == null)
                 return NotFound("battle was not found.");
 
-            if (dbContext.BattleStates.FirstOrDefault(b => b.UserId == user.Id) != null)
+            if (dbContext.BattleStates.FirstOrDefault(b => b.UserId == user.Id || !b.IsFinished) != null)
                 return BadRequest("User is already in a battle.");
 
             BattleState battleState = new() 
@@ -122,28 +171,28 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             dbContext.BattleStates.Add(battleState);
             await dbContext.SaveChangesAsync();
 
-            BattleState? battleState_ = dbContext.BattleStates.FirstOrDefault(b => b.UserId == user.Id);
+            BattleState? savedBattleState = dbContext.BattleStates.FirstOrDefault(b => b.UserId == user.Id);
 
-            return Ok(new BattleStartResult 
+            return Ok(new BattleStartResponse 
             { 
-                IsSuccess = true, 
                 EnemiesHealth = battleState.EnemiesHealth, 
                 EnemiesNumber = battleState.EnemiesNumber, 
-                IsFinished = false, 
+                EnemiesFullHealth = battleState.EnemiesHealth,
+                IsBattleOver = false, 
                 PlayerHealth = battleState.PlayerHealth, 
                 Turn = 1,
-                Id = battleState_.Id
+                BattleStateId = savedBattleState.Id
             });
         }
 
         [HttpPost("validateBattle")]
-        public async Task<IActionResult> RequestLessonAndBattleCompletion([FromBody] RequestBattleCompletion request)
+        public async Task<IActionResult> ValidateBattleState([FromBody] RequestRoundCompletion request)
         {
             int userId = GetUserId();
 
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
-                return NotFound("User could not be found.");
+                return Forbid();
 
             var battleState = dbContext.BattleStates
                 .FirstOrDefault(b => b.UserId == user.Id);
@@ -169,6 +218,8 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             DamageCalculationDTO result;
             
             result = await Task.Run(() => GetCalculationResult(request.Code, false, battleState.EnemiesNumber, battleState.EnemiesHealth / battleState.EnemiesNumber, battle.DmgMultiplier));
+            
+            battleState.Turn += 1;
 
             if (result.RemainingEnemies.Count == 0)
             {
@@ -199,17 +250,15 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
                 dbContext.BattleStates.Remove(battleState);
                 
                 await dbContext.SaveChangesAsync();
-                result.TotalXpGained = xpGained;
-                return Ok(new BattleResult { IsOver = true , CalculationResult = result, IsSuccess = true });
+                return Ok(new BattleResult { IsOver = true, TotalXpGained = xpGained, Turn = battleState.Turn });
             }
 
-            battleState.Turn += 1;
             battleState.EnemiesNumber = result.RemainingEnemies.Count;
             battleState.EnemiesHealth = result.RemainingEnemies.Sum(e => e.Health);
-            battleState.PlayerHealth = battleState.PlayerHealth - result.SelfDamage;
+            battleState.PlayerHealth = battleState.PlayerHealth - result.DamageTaken;
             dbContext.BattleStates.Update(battleState);
             await dbContext.SaveChangesAsync();
-            return Ok(new BattleResult { IsOver = false, CalculationResult = result, IsSuccess = true });
+            return Ok(new BattleResult { IsOver = false, CalculationResult = result, Turn = battleState.Turn });
         }
 
         [HttpPost("endBattle")]
@@ -219,15 +268,15 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
 
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
-                return NotFound("User was not found.");
+                return Forbid();
 
-            var battleState = dbContext.BattleStates.FirstOrDefault(b => b.UserId == user.Id && b.Id == request.BattleId);
+            var battleState = dbContext.BattleStates.FirstOrDefault(b => b.Id == request.BattleSessionId);
             if (battleState == null)
                 return NotFound("Battle session could not be found.");
 
             dbContext.BattleStates.Remove(battleState);
             await dbContext.SaveChangesAsync();
-            return Ok(new BattleEndResult { IsSuccess = true });
+            return Ok(true);
         }
     }
 }

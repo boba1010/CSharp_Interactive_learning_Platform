@@ -1,0 +1,76 @@
+.profile-container {
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 128, 128, 0.4) transparent;
+}
+
+.profile-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.profile-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.profile-container::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.4);
+    border-radius: 10px;
+}
+
+.profile-header {
+    height: 210px;
+    background-color: #0060ff;
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    position: relative;
+}
+
+.initials {
+    background-color: blue;
+    height: 210px;
+    width: 210px;
+    position: absolute;
+    top: 100px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    border: 1px solid white;
+}
+
+.user-info {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    top: 320px;
+}
+
+.name {
+    font-size: 30px;
+}
+
+.user-overview {
+    display: grid;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto auto;
+    padding: 10px;
+    gap: 10px;
+    margin-top: 200px;
+    margin-bottom: 60px;
+    height: 100px;
+}
+
+.user-overview div {
+    border: 2px solid gray;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}

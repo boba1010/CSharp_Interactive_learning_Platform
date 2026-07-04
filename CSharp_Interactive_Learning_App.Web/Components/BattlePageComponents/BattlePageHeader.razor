@@ -1,0 +1,21 @@
+﻿<div class="battle-page-header">
+    <button class="exit-battle-btn" @onclick="EndBattle"></button>
+    <progress class="progress health-bar" value="@EnemiesCurrentHealth" max="@EnemiesMaxHealth" />
+    <p style="margin:0;font-size: 18px;">👾@EnemiesNumber</p>
+</div>
+
+@code {
+    [Parameter]
+    public int EnemiesCurrentHealth { get; set; }
+    [Parameter]
+    public int EnemiesMaxHealth { get; set; }
+    [Parameter]
+    public int EnemiesNumber { get; set; }
+    [Parameter]
+    public EventCallback OnEndBattleClick { get; set; }
+
+    private async Task EndBattle()
+    {
+        await OnEndBattleClick.InvokeAsync();
+    }
+}

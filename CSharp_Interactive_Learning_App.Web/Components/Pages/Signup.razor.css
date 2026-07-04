@@ -1,0 +1,58 @@
+.hidden {
+    display: none;
+}
+
+h4 {
+    text-align: center;
+}
+
+.signup-form {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1c1c1c;
+    height: 85vh;
+    color: white;
+}
+
+.form-input {
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    background: #2c2c2c;
+    border-radius: 12px;
+    width: 300px;
+    height: 45px;
+    border: solid 1px grey;
+    outline: none;
+    color: white;
+}
+
+.form-input:focus {
+    border-bottom: 2px solid royalblue;
+}
+
+.submit-btn {
+    padding: 10px;
+    width: 300px;
+    height: 45px;
+    border: none;
+    outline: none;
+    background-color: royalblue;
+    color: white;
+    border-radius: 12px;
+}
+
+.form-link {
+    padding: 10px;
+    width: auto;
+    min-width: 300px;
+    margin-top: auto;
+    text-align: center;
+    outline: none;
+    text-decoration: none;
+    border: 2px solid royalblue;
+    color: white;
+    border-radius: 20px;
+}

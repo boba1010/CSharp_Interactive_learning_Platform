@@ -1,0 +1,30 @@
+﻿<nav class="nav-bar">
+    @if (CurrentPath == "")
+    {
+        <div class="brand">
+            <span class="brand-name">CodeBase</span>
+        </div>
+    }
+    <div class="nav-items">
+        <div class="navbar-item">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Home</NavLink>
+        </div>
+        <div class="navbar-item">
+            <NavLink class="nav-link" href="/leaderboard">Leaderboard</NavLink>
+        </div>
+        <div class="navbar-item">
+            <NavLink class="nav-link" href="/profile">Profile</NavLink>
+        </div>
+        <div class="navbar-item">
+            <NavLink class="nav-link" href="/challenges">Challenges</NavLink>
+        </div>
+        <div class="navbar-item">
+            <NavLink class="nav-link" href="/playground">PlayGround</NavLink>
+        </div>
+    </div>
+</nav>
+
+@code {
+    [Parameter]
+    public string CurrentPath { get; set; }
+}

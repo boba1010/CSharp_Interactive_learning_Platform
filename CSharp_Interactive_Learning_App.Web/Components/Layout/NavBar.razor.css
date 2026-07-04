@@ -1,0 +1,29 @@
+.nav-bar {
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.nav-items {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.brand {
+    font-size: 25px;
+}
+
+.brand-name {
+    color: royalBlue;
+}
+
+.brand-name::after {
+    content: '/>';
+    color: grey;
+}
+
+.brand-name::before {
+    content: '<';
+    color: grey;
+}

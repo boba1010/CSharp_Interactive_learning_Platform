@@ -1,0 +1,45 @@
+﻿<div class="@(IsVisible ? "visible" : "hidden") victory-dialog">
+    <section>
+        <h3 align="center">Victory!</h3>
+        <p class="battle-stats">
+            <span>Total Damage Dealt: @TotalDamageDealt</span>
+            <span>Total Damage Taken: @TotalDamageTaken</span>
+            <span>Total Gained XP: @TotalGainedXP</span>
+        </p>
+    </section>
+    <section class="buttons">
+        <button @onclick="OnReturnButtonClick">Return</button>
+        <button @onclick="OnRetryButtonClick">Retry</button>
+        <button @onclick="OnNextButtonClick">Next</button>
+    </section>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+    [Parameter]
+    public int TotalDamageDealt { get; set; }
+    [Parameter]
+    public int TotalDamageTaken { get; set; }
+    [Parameter]
+    public int TotalGainedXP { get; set; }
+    [Parameter]
+    public EventCallback OnReturnButtonClicked { get; set; }
+    [Parameter]
+    public EventCallback OnRetryButtonClicked { get; set; }
+    [Parameter]
+    public EventCallback OnNextButtonClicked { get; set; }
+
+    private async Task OnReturnButtonClick()
+    {
+        await OnReturnButtonClicked.InvokeAsync();
+    }
+    private async Task OnRetryButtonClick()
+    {
+        await OnRetryButtonClicked.InvokeAsync();
+    }
+    private async Task OnNextButtonClick()
+    {
+        await OnNextButtonClicked.InvokeAsync();
+    }
+}

@@ -8,18 +8,6 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowBlazor", policy =>
-    {
-        policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowAnyOrigin();
-    });
-});
-
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("AppDb"));
 
@@ -64,8 +52,6 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
-
-app.UseStaticFiles();
 
 using var scope = app.Services.CreateScope();
 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();

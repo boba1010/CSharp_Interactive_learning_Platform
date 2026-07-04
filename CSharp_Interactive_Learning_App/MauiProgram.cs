@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui;
 using CSharp_Interactive_Learning_App.Services;
+using CSharp_Interactive_Learning_App.Shared.Services;
 using CSharp_Interactive_Learning_App.ViewModels;
 using Microsoft.Extensions.Logging;
 
@@ -22,8 +23,10 @@ namespace CSharp_Interactive_Learning_App
             builder.Services.AddSingleton<UserViewModel>();
             builder.Services.AddSingleton<HomeViewModel>();
             builder.Services.AddSingleton<BattleViewModel>();
-            builder.Services.AddSingleton<UserService>();
-            builder.Services.AddSingleton<BattleService>();
+            builder.Services.AddSingleton<IAuthService, AuthService>();
+            builder.Services.AddSingleton<IBattleService, BattleService>();
+            builder.Services.AddSingleton<ITokenService, TokenService>();
+            builder.Services.AddSingleton<Shared.Services.ISecureStorage, SecureStorageService>();
             builder.Services.AddSingleton<HttpClient>();
             builder.Services.AddSingleton<ApiClient>();
 #if DEBUG

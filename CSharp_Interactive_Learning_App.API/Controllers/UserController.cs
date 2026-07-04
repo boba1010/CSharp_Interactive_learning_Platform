@@ -1,7 +1,9 @@
 ﻿using CSharp_Interactive_Learning_App.API.DbContexts;
-using CSharp_Interactive_Learning_App.API.DTOs.UserDTOs;
 using CSharp_Interactive_Learning_App.API.Models;
 using CSharp_Interactive_Learning_App.API.Services;
+using CSharp_Interactive_Learning_App.Shared.Contracts.Requests;
+using CSharp_Interactive_Learning_App.Shared.Contracts.Responses;
+using CSharp_Interactive_Learning_App.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +24,34 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             return userId;
         }
 
+        private static UserDTO MapUserDTO(User user)
+        {
+            return new()
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Username = user.Username,
+                Email = user.Email,
+                CurrentLevel = user.CurrentLevel,
+                TotalXp = user.TotalXp,
+                CompletedLessonIds = user.CompletedLessonIds,
+                UnlockedLessonIds = user.UnlockedLessonIds,
+            };
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetUser()
+        {
+            int userId = GetUserId();
+
+            User? user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+                return Forbid();
+
+            return Ok(MapUserDTO(user));
+        }
+
         [Authorize]
         [HttpGet("auth/verify")]
         public async Task<IActionResult> VerifyUser()
@@ -32,16 +62,22 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
 
             User? user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
-                return BadRequest("The user was not found.");
+                return Forbid();
             return Ok();
         }
 
         [HttpPost("auth/login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
         {
+            if (string.IsNullOrEmpty(request.Email))
+                return BadRequest("Email cannot be empty");
+
+            if (string.IsNullOrEmpty(request.Password))
+                return BadRequest("Password cannot be empty");
+
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
-                return BadRequest("The user was not found.");
+                return Forbid();
 
             var salt = user.Salt;
 
@@ -58,6 +94,9 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
                 UserId = user.Id,
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
             };
+
+            dbContext.RefreshTokens.Add(newRefreshToken);
+            await dbContext.SaveChangesAsync();
 
             var userDTO = new UserDTO
             {
@@ -77,6 +116,18 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
         [HttpPost("auth/signup")]
         public async Task<IActionResult> Signup([FromBody] UserSignupRequest request)
         {
+            if (string.IsNullOrEmpty(request.Username))
+                return BadRequest("Username cannot be empty");
+
+            if (string.IsNullOrEmpty(request.FullName))
+                return BadRequest("Fullname cannot be empty");
+
+            if (string.IsNullOrEmpty(request.Email))
+                return BadRequest("Email cannot be empty");
+
+            if (string.IsNullOrEmpty(request.Password))
+                return BadRequest("Password cannot be empty");
+
             if (dbContext.Users.Any(u => u.Email == request.Email || u.Username == request.Username))
                 return BadRequest("This Email address or username is already used.");
 
@@ -87,22 +138,23 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
             var hashPassword = authService.HashPassword(request.Password, salt);
 
             var user = new User { Email = request.Email, Password = hashPassword, Salt = salt, Username = request.Username, FullName = request.FullName };
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync();
 
+            var savedUser = dbContext.Users.FirstOrDefault(u => u.Email == user.Email);
             var newRefreshToken = new RefreshToken()
             {
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(30),
                 IsRevoked = false,
-                UserId = user.Id,
+                UserId = savedUser.Id,
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
             };
 
             dbContext.RefreshTokens.Add(newRefreshToken);
-            dbContext.Users.Add(user);
             await dbContext.SaveChangesAsync();
 
-            var userToken = dbContext.Users.FirstOrDefault(u => u.Email == request.Email);
-            var token = authService.GenerateJwtToken(userToken.Id, request.Email, "student");
+            var token = authService.GenerateJwtToken(savedUser.Id, request.Email, "student");
 
             var userDTO = new UserDTO
             {
@@ -120,9 +172,9 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
         }
 
         [HttpPost("auth/refresh")]
-        public async Task<IActionResult> RefreshSession([FromBody] RefreshTokenRequest request)
+        public async Task<IActionResult> RefreshSession([FromBody] RequestRefreshToken request)
         {
-            var refreshToken = dbContext.RefreshTokens.FirstOrDefault(x => x.Token == x.Token);
+            var refreshToken = dbContext.RefreshTokens.FirstOrDefault(x => x.Token == request.Token);
             if (refreshToken == null)
                 return Unauthorized();
 
@@ -132,7 +184,7 @@ namespace CSharp_Interactive_Learning_App.API.Controllers
 
             var user = dbContext.Users.FirstOrDefault(u => u.Id == refreshToken.UserId);
             if (user == null)
-                return Unauthorized();
+                return Forbid();
 
             var accessToken = authService.GenerateJwtToken(user.Id, user.Email, "student");
             var newRefreshToken = new RefreshToken()

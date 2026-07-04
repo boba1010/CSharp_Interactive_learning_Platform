@@ -1,0 +1,71 @@
+﻿@page "/Signup"
+@using CSharp_Interactive_Learning_App.Shared.Services
+@inject IAuthService AuthService
+@inject HttpClient HttpClient
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Register -- CodeBase</PageTitle>
+
+<form class="signup-form">
+    <div class="@(step == 0 ? "" : "hidden")">
+        <h4>What should we call you?</h4>
+        <input class="form-input" placeholder="Full name" @bind-value="request.FullName" />
+    </div>
+    <div class="@(step == 1 ? "" : "hidden")">
+        <h4>Enter your user name.</h4>
+        <input class="form-input" placeholder="User name" @bind-value="request.Username" />
+    </div>
+    <div class="@(step == 2 ? "" : "hidden")">
+        <h4>Enter your Email.</h4>
+        <input class="form-input" placeholder="Email" type="email" @bind-value="request.Email" />
+    </div>
+    <div class="@(step >= 3 ? "" : "hidden")">
+        <h4>Enter your password.</h4>
+        <input class="form-input" placeholder="Password" type="password" @bind-value="request.Password" />
+    </div>
+    <div>
+        <button type="button" class="submit-btn" @onclick="OnNextButtonClicked">@buttonText</button>
+    </div>
+    <a href="login" class="form-link">Have an account? Login!</a>
+</form>
+
+@if (!string.IsNullOrEmpty(errorMsg))
+{
+    <p>@errorMsg</p>
+}
+
+@code {
+    UserSignupRequest request = new();
+    string? errorMsg;
+
+    string buttonText = "Next";
+    int step = 0;
+
+    private async Task OnNextButtonClicked()
+    {
+        if (step == 2)
+            buttonText = "Create account";
+        if (step <= 2)
+            step++;
+        else if (step == 3)
+            await SignupAsync();
+    }
+
+    private async Task SignupAsync()
+    {
+        errorMsg = null;
+        try
+        {
+            var result = await AuthService.SignupAsync(request);
+            var isLoggedIn = result.IsSuccess;
+            if (isLoggedIn)
+            {
+                Nav.NavigateTo("/");
+                return;
+            }
+            errorMsg = result.ErrorMessage;
+        }
+        catch { }
+    }
+}

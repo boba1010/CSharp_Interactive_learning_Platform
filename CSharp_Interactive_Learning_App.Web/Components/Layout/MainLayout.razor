@@ -1,0 +1,52 @@
+﻿@inherits LayoutComponentBase
+@using CSharp_Interactive_Learning_App.Web.Services
+@inject NavigationManager NavManager
+@implements IDisposable
+
+<div style="background-color: #1c1c1c;height: 100vh;color:white; overflow: hidden;">
+    @if (!isNavbarHidden)
+    {
+        <div>
+            <NavBar CurrentPath="@currentPath" />
+        </div>
+    }
+    <main>
+        @Body
+    </main>
+</div>
+
+@code {
+    private bool isNavbarHidden;
+    private string? currentPath;
+
+    protected override void OnInitialized()
+    {
+        CheckPath(NavManager.Uri);
+        NavManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        CheckPath(e.Location);
+        StateHasChanged();
+    }
+
+    private void CheckPath(string url)
+    {
+        var uri = new Uri(url);
+        var absolutePath = uri.AbsolutePath;
+        var cleanPath = absolutePath.Trim('/', ' ');
+        currentPath = cleanPath;
+        isNavbarHidden = cleanPath.Equals("battle", StringComparison.OrdinalIgnoreCase);
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+    }
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= OnLocationChanged;
+    }
+}

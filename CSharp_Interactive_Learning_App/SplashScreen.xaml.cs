@@ -24,11 +24,12 @@ namespace CSharp_Interactive_Learning_App
             var page = Shell.Current.CurrentPage;
             page.Opacity = 1;
             page.FadeToAsync(0);
-            bool isLoggedIn = Preferences.Get("IsLoggedIn", false);
+
+            bool isLoggedIn = ViewModel.IsLoggedIn;
             if (isLoggedIn)
-                Shell.Current.GoToAsync($"Home", false);
+                Shell.Current.GoToAsync($"Home", true);
             else
-                Shell.Current.GoToAsync($"Login", false);
+                Shell.Current.GoToAsync($"Login", true);
         }
     }
 }
