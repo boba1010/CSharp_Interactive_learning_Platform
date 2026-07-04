@@ -7,7 +7,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
 {
     public class AuthService(HttpClient httpClient, ApiClient apiClient, ITokenService tokenService) : IAuthService
     {
-        private const string url = "http://192.168.1.150:5000/api/user";
+        private const string url = "https://192.168.1.150:5001/api/user";
 
         public async Task<ServiceResult<UserLoginResponse>> LoginAsync(UserLoginRequest request)
         {
@@ -61,12 +61,14 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
             {
                 return ServiceResult<UserSignupResponse>.Failure("Error: Connection Timeout.");
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
+                Console.WriteLine(ex.Message);
                 return ServiceResult<UserSignupResponse>.Failure("Error: Network connection failed.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return ServiceResult<UserSignupResponse>.Failure($"Error: An unexpected system error occurred.");
             }
         }

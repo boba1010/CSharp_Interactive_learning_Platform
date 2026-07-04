@@ -1,0 +1,181 @@
+﻿@page "/battle"
+@using CSharp_Interactive_Learning_App.Blazor.Components
+@using CSharp_Interactive_Learning_App.Blazor.Components.BattlePageComponents
+@using CSharp_Interactive_Learning_App.Shared.Services
+@using CSharp_Interactive_Learning_App.Shared.DTOs
+@using Shared.Contracts.Requests
+@inject IBattleService BattleService
+@inject NavigationManager Nav
+@inject IAuthService AuthService
+
+<PageTitle>Battle -- Codebase</PageTitle>
+
+<div class="battle-page-container @(BattleState.IsBattleOver? "hidden" : "visible")">
+    <BattlePageHeader EnemiesCurrentHealth="BattleState.EnemiesHealth" 
+                      EnemiesMaxHealth="BattleState.EnemiesFullHealth" 
+                      EnemiesNumber="BattleState.EnemiesNumber" 
+                      OnEndBattleClick="OnEndBattleClick" />
+    <BattleArenaComponent EnemiesNumber="BattleState.EnemiesNumber" 
+                          PlayerHealth="BattleState.PlayerHealth"
+                          OnCheckCodeClicked="OnCheckCodeClicked" />
+
+    <Dialog IsOpen="IsContentDialogOpen"
+            Title="Content"
+            PrimaryButtonText="OK"
+            OnPrimaryButtonClick="OnContentDialogPrimaryButtonClick">
+        <p>@Content</p>
+    </Dialog>
+    <Dialog IsOpen="IsInstructionDialogOpen"
+            Title="Instructions"
+            PrimaryButtonText="OK"
+            OnPrimaryButtonClick="OnInstructionDialogPrmaryButtonClick">
+        <p>@Instructions</p>
+    </Dialog>
+</div>
+<VictoryDialog IsVisible="BattleState.IsBattleOver"
+               TotalDamageDealt="BattleState.TotalDamageDealt"
+               TotalDamageTaken="BattleState.TotalDamageTaken"
+               TotalGainedXP="TotalGainedXP" 
+               OnReturnButtonClicked="OnReturnButtonClick"
+               OnNextButtonClicked="OnNextButtonClick"
+               OnRetryButtonClicked="OnRetryButtonClick" />
+
+@code{
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "id")]
+    public int Id { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "chapterId")]
+    public int ChapterId { get; set; }
+
+    private bool IsInstructionDialogOpen { get; set; }
+    private string Instructions { get; set; }
+    private bool IsContentDialogOpen { get; set; }
+    private string Content { get; set; }
+
+    private BattleStateDTO BattleState { get; set; } = new();
+    private int TotalGainedXP { get; set; }
+
+    private string? errorMsg;
+
+    private void OnReturnButtonClick()
+    {
+        Nav.NavigateTo("/");
+    }
+    private void OnNextButtonClick()
+    {
+        int nextId = Id + 1;
+        int nextChapter = (int)Math.Ceiling(nextId / 9.0);
+        Nav.NavigateTo($"/battle?id={nextId}&chapterId={nextChapter}");
+    }
+    private void OnRetryButtonClick()
+    {
+        Nav.NavigateTo($"/battle?id={Id}&chapterId={ChapterId}");
+    }
+
+    private void OnContentDialogPrimaryButtonClick()
+    {
+        IsContentDialogOpen = false;
+    }
+
+    private void OnInstructionDialogPrmaryButtonClick()
+    {
+        IsInstructionDialogOpen = false;
+    }
+
+    private RequestBattleStart RequestBattleStart { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RendererInfo.IsInteractive)
+            return;
+
+        var authServiceResult = await AuthService.VerifyUserAsync();
+        var isAuthenticated = authServiceResult.Data;
+        if (!isAuthenticated)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        var battleServiceResult = await BattleService.GetBattleByIdAsync(Id, ChapterId);
+        if (battleServiceResult.IsSuccess)
+        {
+            var battle = battleServiceResult.Data;
+
+            Instructions = battle.Instructions;
+            IsInstructionDialogOpen = true;
+
+            Content = battle.Content;
+            IsContentDialogOpen = true;
+        }
+        else
+        {
+            return;
+        }
+
+        RequestBattleStart.BattleId = Id;
+        RequestBattleStart.ChapterId = ChapterId;
+        var response = await BattleService.StartBattleAsync(RequestBattleStart);
+        if (response.IsSuccess)
+        {
+            BattleState = new()
+            {
+                BattleStateId = response.Data.BattleStateId,
+                EnemiesHealth = response.Data.EnemiesHealth,
+                EnemiesNumber = response.Data.EnemiesNumber,
+                EnemiesFullHealth = response.Data.EnemiesFullHealth,
+                IsBattleOver = response.Data.IsBattleOver,
+                PlayerHealth = response.Data.PlayerHealth,
+                Turn = response.Data.Turn,
+            };
+            return;
+        }
+        errorMsg = response.ErrorMessage;
+        Console.WriteLine(errorMsg);
+    }
+
+    private async Task OnEndBattleClick()
+    {
+        RequestBattleEnd request = new()
+        {
+            BattleSessionId = BattleState.BattleStateId,
+            ChapterId = ChapterId,
+        };
+        var response = await BattleService.EndBattleAsync(request);
+        if (response.IsSuccess)
+        {
+            if (response.Data)
+                Nav.NavigateTo("/");
+            return;
+        }
+        errorMsg = response.ErrorMessage;
+    }
+
+    private async Task OnCheckCodeClicked(RequestRoundCompletion request)
+    {
+        request.BattleId = Id;
+        request.ChapterId = ChapterId;
+        var response = await BattleService.ValidateBattleAsync(request);
+        if (response.IsSuccess)
+        {
+            if (response.Data.CalculationResult != null)
+            {
+                BattleState.PlayerHealth -= response.Data.CalculationResult.DamageTaken;
+                BattleState.EnemiesHealth -= response.Data.CalculationResult.DamageDealt;
+                BattleState.TotalDamageDealt += response.Data.CalculationResult.DamageDealt;
+                BattleState.TotalDamageTaken += response.Data.CalculationResult.DamageTaken;
+                BattleState.EnemiesNumber = response.Data.CalculationResult.RemainingEnemies.Count;
+            }
+            BattleState.Turn = response.Data.Turn;
+            BattleState.IsBattleOver = response.Data.IsOver;
+
+            if (BattleState.IsBattleOver)
+            {
+                TotalGainedXP = response.Data.TotalXpGained;
+            }
+            return;
+        }
+
+        errorMsg = response.ErrorMessage;
+    }
+}

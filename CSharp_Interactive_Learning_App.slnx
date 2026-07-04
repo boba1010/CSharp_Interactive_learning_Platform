@@ -1,7 +1,7 @@
 <Solution>
   <Project Path="CSharp_Interactive_Learning_App.API/CSharp_Interactive_Learning_App.API.csproj" />
+  <Project Path="CSharp_Interactive_Learning_App.Blazor/CSharp_Interactive_Learning_App.Blazor.csproj" Id="05367fd9-237f-44eb-921c-c80ac6c899fa" />
   <Project Path="CSharp_Interactive_Learning_App.Shared/CSharp_Interactive_Learning_App.Shared.csproj" Id="de3ed780-037c-431e-bf9d-7fb17306d593" />
-  <Project Path="CSharp_Interactive_Learning_App.Web/CSharp_Interactive_Learning_App.Web.csproj" Id="c2c157c9-638a-4777-94f4-f1c057efa32a" />
   <Project Path="CSharp_Interactive_Learning_App.WinUI/CSharp_Interactive_Learning_App.WinUI.csproj" Id="a47eb293-352c-455e-a260-c2c84416c247">
     <Platform Project="x64" />
     <Deploy />

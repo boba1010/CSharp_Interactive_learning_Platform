@@ -13,6 +13,17 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDataba
 
 builder.Services.AddSingleton<AuthService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BlazorWasmPolicy", policy =>
+    {
+        policy.WithOrigins("https://localhost:7138", "http://localhost:5194")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -49,6 +60,10 @@ builder.Services.AddAuthentication(options =>
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(5000);
+    options.ListenAnyIP(5001, listenOptions =>
+    {
+        listenOptions.UseHttps(); // Automatically loads the dotnet dev-cert
+    });
 });
 
 var app = builder.Build();
@@ -303,7 +318,8 @@ await context.SaveChangesAsync();
 
 // Configure the HTTP request pipeline.
 
-//app.UseHttpsRedirection();
+app.UseCors("BlazorWasmPolicy");
+app.UseHttpsRedirection();
 
 app.UseRouting();
 

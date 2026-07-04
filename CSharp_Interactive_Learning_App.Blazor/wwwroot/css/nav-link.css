@@ -1,0 +1,11 @@
+﻿.navbar-item .nav-link {
+    padding: 5px;
+    border-bottom: solid grey;
+    text-decoration: none;
+    color: gray;
+}
+
+.navbar-item .nav-link.active {
+    border-bottom: solid royalBlue;
+    color: royalBlue;
+}

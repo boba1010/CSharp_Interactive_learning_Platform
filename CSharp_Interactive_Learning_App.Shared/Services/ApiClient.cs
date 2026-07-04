@@ -7,7 +7,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
 {
     public class ApiClient(HttpClient httpClient, ITokenService tokenService)
     {
-        string url = "http://192.168.1.150:5000/api/user";
+        string url = "https://192.168.1.150:5001/api/user";
 
         public async Task<RefreshTokenResponse?> RefreshSessionAsync(RequestRefreshToken request)
         {
