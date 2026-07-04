@@ -9,6 +9,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
     public class BattleService(ApiClient apiClient) : IBattleService
     {
         string url = "https://192.168.1.150:5001/api/chapters";
+        string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
 
         private List<Chapter> MapChapters(List<ChapterDTO> chaptersDTO)
         {
@@ -60,7 +61,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.GetAsync($"{url}"));
+                var response = await apiClient.SendAsync(client => client.GetAsync(apiUrl));
 
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
@@ -100,7 +101,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.GetAsync(url + $"/battlebyid?battleId={battleId}&chapterId={chapterId}"));
+                var response = await apiClient.SendAsync(client => client.GetAsync(apiUrl + $"/battlebyid?battleId={battleId}&chapterId={chapterId}"));
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     return ServiceResult<Battle>.Failure(statusCode: System.Net.HttpStatusCode.Unauthorized);
                 else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
@@ -133,7 +134,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{url}/validateBattle", requestRoundCompletion));
+                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{apiUrl}/validateBattle", requestRoundCompletion));
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     return ServiceResult<Shared.Contracts.Responses.BattleResult>
@@ -170,7 +171,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{url}/startBattle", requestBattleStart));
+                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{apiUrl}/startBattle", requestBattleStart));
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     return ServiceResult<BattleStartResponse>
@@ -208,7 +209,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{url}/endBattle", request));
+                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{apiUrl}/endBattle", request));
 
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {

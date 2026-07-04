@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("BlazorWasmPolicy", policy =>
     {
-        policy.WithOrigins("https://localhost:7138", "http://localhost:5194")
+        policy.WithOrigins("https://csharp-gamified-learning-platform-blazor.onrender.com/")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

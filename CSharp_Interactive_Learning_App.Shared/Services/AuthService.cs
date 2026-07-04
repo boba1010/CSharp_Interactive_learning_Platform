@@ -8,12 +8,13 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
     public class AuthService(HttpClient httpClient, ApiClient apiClient, ITokenService tokenService) : IAuthService
     {
         private const string url = "https://192.168.1.150:5001/api/user";
+        string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
 
         public async Task<ServiceResult<UserLoginResponse>> LoginAsync(UserLoginRequest request)
         {
             try
             {
-                var response = await httpClient.PostAsJsonAsync($"{url}/auth/login", request);
+                var response = await httpClient.PostAsJsonAsync($"{apiUrl}/auth/login", request);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -44,7 +45,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await httpClient.PostAsJsonAsync($"{url}/auth/signup", request);
+                var response = await httpClient.PostAsJsonAsync($"{apiUrl}/auth/signup", request);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -77,7 +78,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var result = await apiClient.SendAsync(client => client.GetAsync($"{url}/auth/verify"));
+                var result = await apiClient.SendAsync(client => client.GetAsync($"{apiUrl}/auth/verify"));
 
                 return ServiceResult<bool>.Success(result.IsSuccessStatusCode);
             }
@@ -99,7 +100,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.GetAsync(url));
+                var response = await apiClient.SendAsync(client => client.GetAsync(apiUrl));
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     return ServiceResult<User>
