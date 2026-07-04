@@ -1,3 +1,0 @@
-﻿global using CSharp_Interactive_Learning_App.Shared.Models;
-global using CSharp_Interactive_Learning_App.Shared.Contracts.Requests;
-global using CSharp_Interactive_Learning_App.Shared.Contracts.Responses;
