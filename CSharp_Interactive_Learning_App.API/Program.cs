@@ -19,8 +19,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("https://csharp-gamified-learning-platform-blazor.onrender.com/")
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
@@ -318,10 +317,9 @@ await context.SaveChangesAsync();
 
 // Configure the HTTP request pipeline.
 
-app.UseCors("BlazorWasmPolicy");
-app.UseHttpsRedirection();
-
 app.UseRouting();
+
+app.UseCors("BlazorWasmPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
