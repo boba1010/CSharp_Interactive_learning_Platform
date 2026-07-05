@@ -8,8 +8,8 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
 {
     public class BattleService(ApiClient apiClient) : IBattleService
     {
-        string url = "https://192.168.1.150:5001/api/chapters";
-        string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
+        private readonly string url = "https://192.168.1.150:5001/api/chapters";
+        private readonly string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
 
         private List<Chapter> MapChapters(List<ChapterDTO> chaptersDTO)
         {

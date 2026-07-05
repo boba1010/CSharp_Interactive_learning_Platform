@@ -7,8 +7,8 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
 {
     public class AuthService(HttpClient httpClient, ApiClient apiClient, ITokenService tokenService) : IAuthService
     {
-        private const string url = "https://192.168.1.150:5001/api/user";
-        string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
+        private const string Uri = "https://192.168.1.150:5001/api/user";
+        private readonly string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
 
         public async Task<ServiceResult<UserLoginResponse>> LoginAsync(UserLoginRequest request)
         {
