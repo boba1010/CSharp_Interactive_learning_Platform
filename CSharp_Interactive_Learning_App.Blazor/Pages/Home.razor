@@ -85,13 +85,15 @@
         }
 
         var chapterResult = await BattleService.GetAllChaptersAsync();
-        chapters = chapterResult?.Data;
-
-        if (chapterResult?.StatusCode == System.Net.HttpStatusCode.Unauthorized || 
+        if (chapterResult.IsSuccess)
+        {
+            chapters = chapterResult?.Data;
+            Console.WriteLine(chapters[0].Name);
+        }
+        else if (chapterResult?.StatusCode == System.Net.HttpStatusCode.Unauthorized || 
             chapterResult?.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
             Nav.NavigateTo("/login");
-            return;
         }
         else
             errorMsg = chapterResult?.ErrorMessage;
