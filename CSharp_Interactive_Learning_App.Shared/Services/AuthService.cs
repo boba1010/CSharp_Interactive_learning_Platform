@@ -3,136 +3,96 @@ using CSharp_Interactive_Learning_App.Shared.Contracts.Responses;
 using CSharp_Interactive_Learning_App.Shared.Models;
 using System.Net.Http.Json;
 
-namespace CSharp_Interactive_Learning_App.Shared.Services
+namespace CSharp_Interactive_Learning_App.Shared.Services;
+
+public class AuthService(HttpClient httpClient, ApiClient apiClient, ITokenService tokenService) : IAuthService
 {
-    public class AuthService(HttpClient httpClient, ApiClient apiClient, ITokenService tokenService) : IAuthService
+    private const string Uri = "https://localhost:7279/api/user";
+    //private const string Uri = "https://csharp-interactive-learning-platform.onrender.com/api/user";
+
+    public async Task<ServiceResult<UserLoginResponse>> LoginAsync(UserLoginRequest request)
     {
-        private const string Uri = "https://192.168.1.150:5001/api/user";
-        private readonly string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
-
-        public async Task<ServiceResult<UserLoginResponse>> LoginAsync(UserLoginRequest request)
+        try
         {
-            try
-            {
-                var response = await httpClient.PostAsJsonAsync($"{apiUrl}/auth/login", request);
+            var response = await httpClient.PostAsJsonAsync($"{Uri}/auth/login", request);
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    var msg = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<UserLoginResponse>.Failure(msg);
-                }
+            if (!response.IsSuccessStatusCode)
+            {
+                var msg = await response.Content.ReadAsStringAsync();
+                return ServiceResult<UserLoginResponse>.Failure(msg);
+            }
 
-                var result = await response.Content.ReadFromJsonAsync<UserLoginResponse>();
-                await tokenService.SetTokenAsync(result.Token);
-                await tokenService.SetRefreshTokenAsync(result.RefreshToken);
-                return ServiceResult<UserLoginResponse>.Success(result);
-            }
-            catch (TaskCanceledException)
-            {
-                return ServiceResult<UserLoginResponse>.Failure("Error: Connection Timeout.");
-            }
-            catch (HttpRequestException)
-            {
-                return ServiceResult<UserLoginResponse>.Failure("Error: Network connection failed.");
-            }
-            catch (Exception)
-            {
-                return ServiceResult<UserLoginResponse>.Failure($"Error: An unexpected system error occurred.");
-            }
+            var result = await response.Content.ReadFromJsonAsync<UserLoginResponse>();
+            await tokenService.SetTokenAsync(result?.Token);
+            await tokenService.SetRefreshTokenAsync(result?.RefreshToken);
+            return ServiceResult<UserLoginResponse>.Success(result);
         }
-
-        public async Task<ServiceResult<UserSignupResponse>> SignupAsync(UserSignupRequest request)
+        catch (TaskCanceledException)
         {
-            try
-            {
-                var response = await httpClient.PostAsJsonAsync($"{apiUrl}/auth/signup", request);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var msg = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<UserSignupResponse>.Failure(msg);
-                }
-
-                var result = await response.Content.ReadFromJsonAsync<UserSignupResponse>();
-                await tokenService.SetTokenAsync(result.Token);
-                await tokenService.SetRefreshTokenAsync(result.RefreshToken);
-                return ServiceResult<UserSignupResponse>.Success(result);
-            }
-            catch (TaskCanceledException)
-            {
-                return ServiceResult<UserSignupResponse>.Failure("Error: Connection Timeout.");
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine(ex.Message);
-                return ServiceResult<UserSignupResponse>.Failure("Error: Network connection failed.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return ServiceResult<UserSignupResponse>.Failure($"Error: An unexpected system error occurred.");
-            }
+            return ServiceResult<UserLoginResponse>.Failure("Error: Connection Timeout.");
         }
-
-        public async Task<ServiceResult<bool>> VerifyUserAsync()
+        catch (HttpRequestException)
         {
-            try
-            {
-                var result = await apiClient.SendAsync(client => client.GetAsync($"{apiUrl}/auth/verify"));
-
-                return ServiceResult<bool>.Success(result.IsSuccessStatusCode);
-            }
-            catch (TaskCanceledException)
-            {
-                return ServiceResult<bool>.Failure("Error: Connection Timeout.");
-            }
-            catch (HttpRequestException)
-            {
-                return ServiceResult<bool>.Failure("Error: Network connection failed.");
-            }
-            catch (Exception)
-            {
-                return ServiceResult<bool>.Failure($"Error: An unexpected system error occurred.");
-            }
+            return ServiceResult<UserLoginResponse>.Failure("Error: Network connection failed.");
         }
-
-        public async Task<ServiceResult<User>> GetUserDataAsync()
+        catch (Exception)
         {
-            try
-            {
-                var response = await apiClient.SendAsync(client => client.GetAsync(apiUrl));
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    return ServiceResult<User>
-                        .Failure(statusCode: System.Net.HttpStatusCode.Unauthorized);
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                {
-                    return ServiceResult<User>
-                        .Failure(statusCode: System.Net.HttpStatusCode.Forbidden);
-                }
-                else if (!response.IsSuccessStatusCode)
-                {
-                    var msg = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<User>.Failure(msg);
-                }
+            return ServiceResult<UserLoginResponse>.Failure($"Error: An unexpected system error occurred.");
+        }
+    }
 
-                var result = await response.Content.ReadFromJsonAsync<User>();
+    public async Task<ServiceResult<UserSignupResponse>> SignupAsync(UserSignupRequest request)
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync($"{Uri}/auth/signup", request);
 
-                return ServiceResult<User>.Success(result);
-            }
-            catch (TaskCanceledException)
+            if (!response.IsSuccessStatusCode)
             {
-                return ServiceResult<User>.Failure("Error: Connection Timeout.");
+                var msg = await response.Content.ReadAsStringAsync();
+                return ServiceResult<UserSignupResponse>.Failure(msg);
             }
-            catch (HttpRequestException)
-            {
-                return ServiceResult<User>.Failure("Error: Network connection failed.");
-            }
-            catch (Exception)
-            {
-                return ServiceResult<User>.Failure("Error: An unexpected system error occurred.");
-            }
+
+            var result = await response.Content.ReadFromJsonAsync<UserSignupResponse>();
+            await tokenService.SetTokenAsync(result?.Token);
+            await tokenService.SetRefreshTokenAsync(result?.RefreshToken);
+            return ServiceResult<UserSignupResponse>.Success(result);
+        }
+        catch (TaskCanceledException)
+        {
+            return ServiceResult<UserSignupResponse>.Failure("Error: Connection Timeout.");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex.Message);
+            return ServiceResult<UserSignupResponse>.Failure("Error: Network connection failed.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return ServiceResult<UserSignupResponse>.Failure($"Error: An unexpected system error occurred.");
+        }
+    }
+
+    public async Task<ServiceResult<bool>> VerifyUserAsync()
+    {
+        try
+        {
+            var result = await apiClient.SendAsync(client => client.GetAsync($"{Uri}/auth/verify"));
+
+            return ServiceResult<bool>.Success(result.IsSuccessStatusCode);
+        }
+        catch (TaskCanceledException)
+        {
+            return ServiceResult<bool>.Failure("Error: Connection Timeout.");
+        }
+        catch (HttpRequestException)
+        {
+            return ServiceResult<bool>.Failure("Error: Network connection failed.");
+        }
+        catch (Exception)
+        {
+            return ServiceResult<bool>.Failure($"Error: An unexpected system error occurred.");
         }
     }
 }

@@ -10,202 +10,203 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Security.Cryptography;
 
-namespace CSharp_Interactive_Learning_App.API.Controllers
+namespace CSharp_Interactive_Learning_App.API.Controllers;
+
+[ApiController]
+[Route("api/user")]
+public class UserController(AppDbContext dbContext, AuthService authService) : ControllerBase
 {
-    [ApiController]
-    [Route("api/user")]
-    public class UserController(AppDbContext dbContext, AuthService authService) : ControllerBase
+    private int GetUserId()
     {
-        private int GetUserId()
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int userId))
+            throw new UnauthorizedAccessException();
+        return userId;
+    }
+
+    private static UserDTO MapUserDTO(User user)
+    {
+        return new()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-                throw new UnauthorizedAccessException();
-            return userId;
-        }
+            Id = user.Id,
+            FullName = user.FullName,
+            Username = user.Username,
+            Email = user.Email,
+            CurrentLevel = user.CurrentLevel,
+            TotalXp = user.TotalXp,
+            CompletedLessonIds = user.CompletedLessonIds,
+            UnlockedLessonIds = user.UnlockedLessonIds,
+            TotalPoints = user.TotalPoints,
+            AchievementsIds = user.AchievementIds
+        };
+    }
 
-        private static UserDTO MapUserDTO(User user)
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetUser()
+    {
+        int userId = GetUserId();
+
+        User? user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+            return Forbid();
+
+        return Ok(MapUserDTO(user));
+    }
+
+    [Authorize]
+    [HttpGet("auth/verify")]
+    public async Task<IActionResult> VerifyUser()
+    {
+        int userId = GetUserId();
+
+        User? user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+            return Forbid();
+        return Ok();
+    }
+
+    [HttpPost("auth/login")]
+    public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Email))
+            return BadRequest("Email cannot be empty");
+
+        if (string.IsNullOrEmpty(request.Password))
+            return BadRequest("Password cannot be empty");
+
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user == null)
+            return NotFound("User was not found.");
+
+        var salt = user.Salt;
+
+        if (!authService.VerifyPassword(request.Password, user.Password, salt))
+            return Unauthorized("Wrong password.");
+
+        var token = authService.GenerateJwtToken(user.Id, user.Email, "student");
+
+        var newRefreshToken = new RefreshToken()
         {
-            return new()
-            {
-                Id = user.Id,
-                FullName = user.FullName,
-                Username = user.Username,
-                Email = user.Email,
-                CurrentLevel = user.CurrentLevel,
-                TotalXp = user.TotalXp,
-                CompletedLessonIds = user.CompletedLessonIds,
-                UnlockedLessonIds = user.UnlockedLessonIds,
-            };
-        }
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            IsRevoked = false,
+            UserId = user.Id,
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+        };
 
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetUser()
+        dbContext.RefreshTokens.Add(newRefreshToken);
+        await dbContext.SaveChangesAsync();
+
+        var userDTO = new UserDTO
         {
-            int userId = GetUserId();
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            TotalXp = user.TotalXp,
+            Username = user.Username,
+            CurrentLevel = user.CurrentLevel,
+            UnlockedLessonIds = user.UnlockedLessonIds,
+            CompletedLessonIds = user.CompletedLessonIds,
+            TotalPoints = user.TotalPoints,
+            AchievementsIds = user.AchievementIds,
+        };
 
-            User? user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
-            if (user == null)
-                return Forbid();
+        return Ok(new UserLoginResponse { Token = token, User = userDTO, RefreshToken = newRefreshToken.Token });
+    }
 
-            return Ok(MapUserDTO(user));
-        }
+    [HttpPost("auth/signup")]
+    public async Task<IActionResult> Signup([FromBody] UserSignupRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Username))
+            return BadRequest("Username cannot be empty");
 
-        [Authorize]
-        [HttpGet("auth/verify")]
-        public async Task<IActionResult> VerifyUser()
+        if (string.IsNullOrEmpty(request.FullName))
+            return BadRequest("Fullname cannot be empty");
+
+        if (string.IsNullOrEmpty(request.Email))
+            return BadRequest("Email cannot be empty");
+
+        if (string.IsNullOrEmpty(request.Password))
+            return BadRequest("Password cannot be empty");
+
+        if (dbContext.Users.Any(u => u.Email == request.Email || u.Username == request.Username))
+            return BadRequest("This Email address or username is already used.");
+
+        if (request.Username.Length < 8)
+            return BadRequest("The username should be eight characters or more.");
+
+        var salt = authService.GenerateSalt();
+        var hashPassword = authService.HashPassword(request.Password, salt);
+
+        var user = new User { Email = request.Email, Password = hashPassword, Salt = salt, Username = request.Username, FullName = request.FullName };
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        var newRefreshToken = new RefreshToken()
         {
-            Console.WriteLine(User.Identity?.IsAuthenticated);
-            Console.WriteLine(User.Identity?.AuthenticationType);
-            int userId = GetUserId();
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            IsRevoked = false,
+            UserId = user.Id,
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+        };
 
-            User? user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
-            if (user == null)
-                return Forbid();
-            return Ok();
-        }
+        dbContext.RefreshTokens.Add(newRefreshToken);
+        await dbContext.SaveChangesAsync();
 
-        [HttpPost("auth/login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
+        var token = authService.GenerateJwtToken(user.Id, request.Email, "student");
+
+        var userDTO = new UserDTO
         {
-            if (string.IsNullOrEmpty(request.Email))
-                return BadRequest("Email cannot be empty");
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            TotalXp = user.TotalXp,
+            Username = user.Username,
+            CurrentLevel = user.CurrentLevel,
+            UnlockedLessonIds = user.UnlockedLessonIds,
+            CompletedLessonIds = user.CompletedLessonIds,
+            TotalPoints = user.TotalPoints,
+            AchievementsIds = [1]
+        };
 
-            if (string.IsNullOrEmpty(request.Password))
-                return BadRequest("Password cannot be empty");
+        return Ok(new UserSignupResponse { User = userDTO, Token = token, RefreshToken = newRefreshToken.Token });
+    }
 
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (user == null)
-                return Forbid();
+    [HttpPost("auth/refresh")]
+    public async Task<IActionResult> RefreshSession([FromBody] RequestRefreshToken request)
+    {
+        var refreshToken = dbContext.RefreshTokens.FirstOrDefault(x => x.Token == request.Token);
+        if (refreshToken == null)
+            return Unauthorized();
 
-            var salt = user.Salt;
+        if (refreshToken.ExpiresAt <= DateTime.UtcNow || refreshToken.IsRevoked)
+            return Unauthorized();
 
-            if (!authService.VerifyPassword(request.Password, user.Password, salt))
-                return Unauthorized("Wrong password.");
+        var user = dbContext.Users.FirstOrDefault(u => u.Id == refreshToken.UserId);
+        if (user == null)
+            return Forbid();
 
-            var token = authService.GenerateJwtToken(user.Id, user.Email, "student");
-
-            var newRefreshToken = new RefreshToken()
-            {
-                CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(30),
-                IsRevoked = false,
-                UserId = user.Id,
-                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
-            };
-
-            dbContext.RefreshTokens.Add(newRefreshToken);
-            await dbContext.SaveChangesAsync();
-
-            var userDTO = new UserDTO
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FullName = user.FullName,
-                TotalXp = user.TotalXp,
-                Username = user.Username,
-                CurrentLevel = user.CurrentLevel,
-                UnlockedLessonIds = user.UnlockedLessonIds,
-                CompletedLessonIds = user.CompletedLessonIds
-            };
-
-            return Ok(new UserLoginResponse { Token = token, User = userDTO, RefreshToken = newRefreshToken.Token });
-        }
-
-        [HttpPost("auth/signup")]
-        public async Task<IActionResult> Signup([FromBody] UserSignupRequest request)
+        var accessToken = authService.GenerateJwtToken(user.Id, user.Email, "student");
+        var newRefreshToken = new RefreshToken()
         {
-            if (string.IsNullOrEmpty(request.Username))
-                return BadRequest("Username cannot be empty");
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            IsRevoked = false,
+            UserId = user.Id,
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+        };
 
-            if (string.IsNullOrEmpty(request.FullName))
-                return BadRequest("Fullname cannot be empty");
+        refreshToken.IsRevoked = true;
+        dbContext.RefreshTokens.Update(refreshToken);
+        dbContext.RefreshTokens.Add(newRefreshToken);
+        await dbContext.SaveChangesAsync();
 
-            if (string.IsNullOrEmpty(request.Email))
-                return BadRequest("Email cannot be empty");
-
-            if (string.IsNullOrEmpty(request.Password))
-                return BadRequest("Password cannot be empty");
-
-            if (dbContext.Users.Any(u => u.Email == request.Email || u.Username == request.Username))
-                return BadRequest("This Email address or username is already used.");
-
-            if (request.Username.Length < 8)
-                return BadRequest("The username should be eight characters or more.");
-
-            var salt = authService.GenerateSalt();
-            var hashPassword = authService.HashPassword(request.Password, salt);
-
-            var user = new User { Email = request.Email, Password = hashPassword, Salt = salt, Username = request.Username, FullName = request.FullName };
-            dbContext.Users.Add(user);
-            await dbContext.SaveChangesAsync();
-
-            var savedUser = dbContext.Users.FirstOrDefault(u => u.Email == user.Email);
-            var newRefreshToken = new RefreshToken()
-            {
-                CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(30),
-                IsRevoked = false,
-                UserId = savedUser.Id,
-                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
-            };
-
-            dbContext.RefreshTokens.Add(newRefreshToken);
-            await dbContext.SaveChangesAsync();
-
-            var token = authService.GenerateJwtToken(savedUser.Id, request.Email, "student");
-
-            var userDTO = new UserDTO
-            {
-                Id = user.Id,
-                Email = user.Email,
-                FullName = user.FullName,
-                TotalXp = user.TotalXp,
-                Username = user.Username,
-                CurrentLevel = user.CurrentLevel,
-                UnlockedLessonIds = user.UnlockedLessonIds,
-                CompletedLessonIds = user.CompletedLessonIds
-            };
-
-            return Ok(new UserSignupResponse { User = userDTO, Token = token, RefreshToken = newRefreshToken.Token });
-        }
-
-        [HttpPost("auth/refresh")]
-        public async Task<IActionResult> RefreshSession([FromBody] RequestRefreshToken request)
+        return Ok(new RefreshTokenResponse()
         {
-            var refreshToken = dbContext.RefreshTokens.FirstOrDefault(x => x.Token == request.Token);
-            if (refreshToken == null)
-                return Unauthorized();
-
-            if (refreshToken.ExpiresAt <= DateTime.UtcNow
-                || refreshToken.IsRevoked)
-                return Unauthorized();
-
-            var user = dbContext.Users.FirstOrDefault(u => u.Id == refreshToken.UserId);
-            if (user == null)
-                return Forbid();
-
-            var accessToken = authService.GenerateJwtToken(user.Id, user.Email, "student");
-            var newRefreshToken = new RefreshToken()
-            {
-                CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(30),
-                IsRevoked = false,
-                UserId = user.Id,
-                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
-            };
-
-            refreshToken.IsRevoked = true;
-            dbContext.RefreshTokens.Update(refreshToken);
-            dbContext.RefreshTokens.Add(newRefreshToken);
-            await dbContext.SaveChangesAsync();
-
-            return Ok(new RefreshTokenResponse()
-            {
-                AccessToken = accessToken,
-                RefreshToken = newRefreshToken.Token
-            });
-        }
+            AccessToken = accessToken,
+            RefreshToken = newRefreshToken.Token
+        });
     }
 }

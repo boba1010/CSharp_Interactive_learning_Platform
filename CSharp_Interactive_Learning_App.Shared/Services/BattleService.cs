@@ -1,6 +1,5 @@
 ﻿using CSharp_Interactive_Learning_App.Shared.Contracts.Requests;
 using CSharp_Interactive_Learning_App.Shared.Contracts.Responses;
-using CSharp_Interactive_Learning_App.Shared.DTOs;
 using CSharp_Interactive_Learning_App.Shared.Models;
 using System.Net.Http.Json;
 
@@ -8,61 +7,16 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
 {
     public class BattleService(ApiClient apiClient) : IBattleService
     {
-        private readonly string url = "https://192.168.1.150:5001/api/chapters";
-        private readonly string apiUrl = "https://csharp-interactive-learning-platform.onrender.com/api/user";
-
-        private List<Chapter> MapChapters(List<ChapterDTO> chaptersDTO)
-        {
-            var chapters = new List<Chapter>();
-            foreach (var chapterDTO in chaptersDTO)
-            {
-                List<Battle> battles = [];
-                foreach (var battleDTO in chapterDTO.Battles)
-                {
-                    battles.Add(new()
-                    {
-                        Id = battleDTO.Id,
-                        ChapterId = battleDTO.ChapterId,
-                        Content = battleDTO.Content,
-                        EnemiesNumber = battleDTO.EnemiesNumber,
-                        HealthPerEnemy = battleDTO.HealthPerEnemy,
-                        Instructions = battleDTO.Instructions,
-                        IsUnlocked = battleDTO.IsUnlocked,
-                        Name = battleDTO.Name,
-                    });
-                }
-                chapters.Add(new()
-                {
-                    Id = chapterDTO.Id,
-                    Name = chapterDTO.Name,
-                    Battles = battles,
-                });
-            }
-            return chapters;
-        }
-
-        private Battle MapBattle(BattleDTO battleDTO)
-        {
-            Battle battle = new()
-            {
-                Id = battleDTO.Id,
-                ChapterId = battleDTO.ChapterId,
-                Content = battleDTO.Content,
-                EnemiesNumber = battleDTO.EnemiesNumber,
-                HealthPerEnemy = battleDTO.HealthPerEnemy,
-                Instructions = battleDTO.Instructions,
-                IsUnlocked = battleDTO.IsUnlocked,
-                Name = battleDTO.Name,
-            };
-            return battle;
-        }
+        private const string Uri = "https://localhost:7279/api/chapters";
+        //private const string Uri = "https://csharp-interactive-learning-platform.onrender.com/api/user";
 
         public async Task<ServiceResult<List<Chapter>>> GetAllChaptersAsync()
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.GetAsync(apiUrl));
-
+                var response = await apiClient.SendAsync(client => client.GetAsync(Uri));
+                Console.WriteLine(response.StatusCode);
+                Console.WriteLine(await response.Content.ReadAsStringAsync());
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     return ServiceResult<List<Chapter>>
@@ -76,12 +30,12 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
                 else if (!response.IsSuccessStatusCode)
                 {
                     var msg = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine(msg);
                     return ServiceResult<List<Chapter>>.Failure(msg);
                 }
 
-                var result = await response.Content.ReadFromJsonAsync<ChaptersDTO>();
-                var chapters = MapChapters(result.Chapters);
-                return ServiceResult<List<Chapter>>.Success(chapters);
+                var chapters = await response.Content.ReadFromJsonAsync<Chapters>();
+                return ServiceResult<List<Chapter>>.Success(chapters?.ChaptersList);
             }
             catch (TaskCanceledException)
             {
@@ -101,7 +55,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.GetAsync(apiUrl + $"/battlebyid?battleId={battleId}&chapterId={chapterId}"));
+                var response = await apiClient.SendAsync(client => client.GetAsync(Uri + $"/battlebyid?battleId={battleId}&chapterId={chapterId}"));
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     return ServiceResult<Battle>.Failure(statusCode: System.Net.HttpStatusCode.Unauthorized);
                 else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
@@ -112,8 +66,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
                     return ServiceResult<Battle>.Failure(msg);
                 }
 
-                var result = await response.Content.ReadFromJsonAsync<BattleDTO>();
-                var battle = MapBattle(result);
+                var battle = await response.Content.ReadFromJsonAsync<Battle>();
                 return ServiceResult<Battle>.Success(battle);
             }
             catch (TaskCanceledException)
@@ -134,7 +87,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{apiUrl}/validateBattle", requestRoundCompletion));
+                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{Uri}/validateBattle", requestRoundCompletion));
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     return ServiceResult<Shared.Contracts.Responses.BattleResult>
@@ -171,7 +124,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{apiUrl}/startBattle", requestBattleStart));
+                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{Uri}/startBattle", requestBattleStart));
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     return ServiceResult<BattleStartResponse>
@@ -209,7 +162,7 @@ namespace CSharp_Interactive_Learning_App.Shared.Services
         {
             try
             {
-                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{apiUrl}/endBattle", request));
+                var response = await apiClient.SendAsync(client => client.PostAsJsonAsync($"{Uri}/endBattle", request));
 
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {

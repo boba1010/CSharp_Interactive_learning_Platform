@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="CSharp_Interactive_Learning_App.API/CSharp_Interactive_Learning_App.API.csproj" />
+  <Project Path="CSharp_Interactive_Learning_App.Shared/CSharp_Interactive_Learning_App.Shared.csproj" Id="de3ed780-037c-431e-bf9d-7fb17306d593" />
+  <Project Path="CSharp_Interactive_Learning_App.WinUI/CSharp_Interactive_Learning_App.WinUI.csproj" Id="a47eb293-352c-455e-a260-c2c84416c247">
+    <Platform Project="x64" />
+    <Deploy />
+  </Project>
+  <Project Path="CSharp_Interpreter/CSharp_Friendly_Compiler.csproj" />
+  <Project Path="DamageCalculatorV2/DamageCalculatorV2.csproj" Id="24e79109-9771-4fe9-a541-b252853c0bcf" />
+  <Project Path="TestProject/TestProject.csproj" Id="9773da28-6798-41e8-addd-4be82274ad8f" />
+</Solution>

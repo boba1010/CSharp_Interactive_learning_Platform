@@ -8,9 +8,36 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+            
+            <Color x:Key="Primary">RoyalBlue</Color>
+            <Color x:Key="PrimaryDark">#0060ff</Color>
+            <Color x:Key="PrimaryDarkText">#242424</Color>
+            <Color x:Key="Secondary">#DFD8F7</Color>
+            <Color x:Key="SecondaryDarkText">#9880e5</Color>
+            <Color x:Key="Tertiary">#2B0B98</Color>
+
+            <Style TargetType="Rectangle" x:Key="SelectedNavbarLine">
+                <Setter Property="Height" Value="1" />
+                <Setter Property="VerticalAlignment" Value="Bottom" />
+                <Setter Property="Fill" Value="{ThemeResource PrimaryDark}" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="UnSelectedNavbarButton">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Foreground" Value="Gray" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="SelectedNavbarButton">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="Foreground" Value="{ThemeResource PrimaryDark}" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -12,9 +12,20 @@
     <WinUISDKReferences>true</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Content Remove="Assets\code3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Views\AchievementsPage.xaml" />
+    <None Remove="Views\BattlePage.xaml" />
     <None Remove="Views\HomePage.xaml" />
+    <None Remove="Views\LeaderboardPage.xaml" />
+    <None Remove="Views\LoginPage.xaml" />
+    <None Remove="Views\PlayGroundPage.xaml" />
+    <None Remove="Views\ProfilePage.xaml" />
+    <None Remove="Views\SignupPage.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,13 +55,46 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="ViewModels\" />
+    <PackageReference Include="WinUIEdit" Version="0.0.5-prerelease" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CSharp_Interactive_Learning_App.Shared\CSharp_Interactive_Learning_App.Shared.csproj" />
+    <ProjectReference Include="..\CSharp_Interpreter\CSharp_Friendly_Compiler.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\AchievementsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\PlayGroundPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\ProfilePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\LeaderboardPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\SignupPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\LoginPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\BattlePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\HomePage.xaml">

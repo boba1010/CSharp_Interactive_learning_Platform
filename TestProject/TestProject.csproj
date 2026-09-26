@@ -8,9 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="DamageCalculatorV2">
-      <HintPath>..\DamageCalculatorV2\bin\Debug\net10.0\DamageCalculatorV2.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\CSharp_Interpreter\CSharp_Friendly_Compiler.csproj" />
+    <ProjectReference Include="..\DamageCalculatorV2\DamageCalculatorV2.csproj" />
   </ItemGroup>
-
+	
 </Project>

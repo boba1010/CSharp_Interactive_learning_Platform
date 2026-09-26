@@ -2,7 +2,7 @@
 {
     public class ChaptersDTO
     {
-        public List<ChapterDTO> Chapters { get; set; } = [];
+        public List<ChapterDTO> ChaptersList { get; set; } = [];
     }
 
     public class ChapterDTO

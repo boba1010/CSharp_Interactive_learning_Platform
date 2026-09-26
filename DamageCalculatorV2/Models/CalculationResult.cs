@@ -1,12 +1,12 @@
-﻿namespace DamageCalculatorV2.Models
-{
-    public class CalculationResult
-    {
-        public List<Enemy> RemainingEnemies { get; set; } = [];
-        public List<string> Errors { get; set; } = [];
-        public int SelfDamage { get; set; }
+﻿using DamageCalculatorV2.Nodes;
 
-        public int VariableCount { get; set; }
-        public List<DataType> DateTypesUsed { get; set; } = [];
-    }
+namespace DamageCalculatorV2.Models;
+
+public class CalculationResult
+{
+    public List<Enemy> RemainingEnemies { get; set; } = [];
+    public List<string> Errors { get; set; } = [];
+    public List<Statement> Statements { get; set; } = [];
+    public int DamageTaken { get; set; }
+    public int DamageDealt { get; set; }
 }

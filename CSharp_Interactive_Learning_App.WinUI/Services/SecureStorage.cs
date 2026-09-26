@@ -44,7 +44,7 @@ namespace CSharp_Interactive_Learning_App.WinUI.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Secure write failure for key '{key}': {ex.Message}");
-                throw;
+                throw new KeyNotFoundException();
             }
         }
 

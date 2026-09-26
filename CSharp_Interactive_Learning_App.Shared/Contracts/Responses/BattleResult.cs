@@ -1,12 +1,12 @@
 ﻿using CSharp_Interactive_Learning_App.Shared.DTOs;
 
-namespace CSharp_Interactive_Learning_App.Shared.Contracts.Responses
+namespace CSharp_Interactive_Learning_App.Shared.Contracts.Responses;
+
+public class BattleResult
 {
-    public class BattleResult
-    {
-        public bool IsOver { get; set; }
-        public int TotalXpGained { get; set; }
-        public DamageCalculationDTO CalculationResult { get; set; }
-        public int Turn { get; set; }
-    }
+    public bool IsOver { get; set; }
+    public int TotalXpGained { get; set; }
+    public DamageCalculationDTO CalculationResult { get; set; } = null!;
+    public int Turn { get; set; }
+    public string Feedback { get; set; } = null!;
 }

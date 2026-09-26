@@ -1,18 +1,21 @@
 ﻿using DamageCalculatorV2;
-using System.Security.Cryptography;
+
+namespace TestProject;
 
 public class Program
 {
-    public static void Main()
+    public static async Task Main()
     {
-        //DmgCalc dmgCalc = new DmgCalc();
-        //var result = dmgCalc.Main("inti = 5;", 1, 5, false, 1);
+        DmgCalc dmgCalc = new();
+        var result = dmgCalc.Calculate("int i = 5; i = 10;", 1, 5, false, 1);
 
-        //Console.WriteLine($"Self dmg: {result.SelfDamage} | Errors: {result.Errors} | Enemies Number: {result.RemainingEnemies.Count}");
+        Console.WriteLine($"damage dealt: {result.DamageDealt}");
+        Console.WriteLine($"damage taken: {result.DamageTaken}");
 
-        //Console.WriteLine(Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)));
+        foreach (var error in result.Errors)
+            Console.WriteLine(error);
 
-        var key = Environment.GetEnvironmentVariable("JWT_KEY");
-        Console.WriteLine(key);
+        foreach (var variable in result.Statements)
+            Console.WriteLine($"{variable.Type.ToString().ToLower()} {variable.Name} = {variable.Value};");
     }
 }

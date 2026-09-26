@@ -88,7 +88,7 @@
         if (chapterResult.IsSuccess)
         {
             chapters = chapterResult?.Data;
-            Console.WriteLine(chapters[0].Name);
+            Console.WriteLine(chapters.Count);
         }
         else if (chapterResult?.StatusCode == System.Net.HttpStatusCode.Unauthorized || 
             chapterResult?.StatusCode == System.Net.HttpStatusCode.Forbidden)

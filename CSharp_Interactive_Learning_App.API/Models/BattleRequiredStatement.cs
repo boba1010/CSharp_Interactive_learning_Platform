@@ -1,11 +1,11 @@
-﻿namespace CSharp_Interactive_Learning_App.API.Models
+﻿using CSharp_Interactive_Learning_App.Shared.Enums;
+
+namespace CSharp_Interactive_Learning_App.API.Models;
+
+public class BattleRequiredStatement
 {
-    public class BattleRequiredStatement
-    {
-        public int Id { get; set; }
-        public int BattleId { get; set; }
-        public StatementType AllowedStatementType { get; set; }
-        public int Count { get; set; }
-        public Battle Battle { get; set; } = null!;
-    }
+    public int Id { get; set; }
+    public int BattleId { get; set; }
+    public StatementType AllowedStatementType { get; set; }
+    public int Count { get; set; }
 }

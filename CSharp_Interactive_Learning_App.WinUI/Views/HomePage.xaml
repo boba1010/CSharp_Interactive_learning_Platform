@@ -6,11 +6,240 @@
     xmlns:local="using:CSharp_Interactive_Learning_App.WinUI.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:models="using:CSharp_Interactive_Learning_App.Shared.Models"
+    mc:Ignorable="d"
+    x:Name="homePage">
 
-    <Grid>
-        <ItemsRepeater>
-            
-        </ItemsRepeater>
+    <Page.Resources>
+        <ResourceDictionary>
+            <Style x:Key="BattleButton" TargetType="Button">
+                <Setter Property="Background" Value="#303030" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="999" />
+                <Setter Property="Width" Value="80" />
+                <Setter Property="Height" Value="80" />
+
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid 
+                                x:Name="RootGrid" 
+                                Background="Gray" 
+                                CornerRadius="999">
+
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+
+                                        <VisualState x:Name="Normal">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames 
+                                                        Storyboard.TargetName="RootGrid" 
+                                                        Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource PrimaryDark}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+
+                                        <VisualState x:Name="Disabled">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootGrid" 
+                                                                   Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBackgroundDisabled}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" 
+                                                                   Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonForegroundDisabled}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+
+                                        <VisualState x:Name="PointerOver">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootGrid" 
+                                                                   Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource PrimaryDark}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+
+                                        <VisualState x:Name="Pressed">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootGrid" 
+                                                                   Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource Primary}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+
+                                <ContentPresenter 
+                                        x:Name="ContentPresenter"
+                                        Content="{TemplateBinding Content}"
+                                        Padding="{TemplateBinding Padding}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="NoHoverItemContainer" TargetType="ItemContainer">
+                <Setter Property="Background" Value="Transparent" />
+
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ItemContainer">
+                            <Grid x:Name="RootGrid" Background="{TemplateBinding Background}">
+
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver" />
+                                        <VisualState x:Name="Pressed" />
+                                        <VisualState x:Name="Disabled" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="SelectionStates">
+                                        <VisualState x:Name="Unselected" />
+                                        <VisualState x:Name="Selected" />
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+
+                                <ContentPresenter 
+                                    Content="{TemplateBinding Child}"
+                                    Margin="{TemplateBinding Padding}" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Page.Resources>
+    
+    <Grid
+        Padding="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+        <Grid
+            Visibility="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}"
+            Margin="0, 20, 0, 0"
+            Background="#b5000000"
+            CornerRadius="20"
+            Grid.Row="1">
+            <Image 
+                Source="/Assets/code3.png" 
+                Opacity="0.4"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Stretch="Fill"
+                IsHitTestVisible="False" />
+            <ItemsView
+                ItemsSource="{x:Bind ViewModel.Chapters}" 
+                SelectionMode="None">
+                <ItemsView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Chapter">
+                        <ItemContainer
+                            Style="{StaticResource NoHoverItemContainer}">
+                            <Grid
+                                Padding="30, 30, 0, 0"
+                                RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, auto"
+                                ColumnDefinitions="*, Auto, Auto, *">
+                                <TextBlock 
+                                    Grid.ColumnSpan="4"
+                                    Margin="0, 0, 0, 20"
+                                    HorizontalAlignment="Center" 
+                                    VerticalAlignment="Center">
+                                    <Run Text="------------------------" Foreground="Gray"/>    
+                                    <Run Text="Chapter" Foreground="Gray"/>    
+                                    <Run Text="{x:Bind Id}" Foreground="Gray"/>
+                                    <Run Text=":" Foreground="Gray"/>
+                                    <Run Text="{x:Bind Name}" Foreground="Gray"/>
+                                    <Run Text="------------------------" Foreground="Gray"/>
+                                </TextBlock>
+
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    IsEnabled="{x:Bind Battles[0].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[0]}" />
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="2"
+                                    Grid.Column="2"
+                                    IsEnabled="{x:Bind Battles[1].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[1]}" />
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="3"
+                                    Grid.Column="1"
+                                    IsEnabled="{x:Bind Battles[2].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[2]}" />
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="4"
+                                    Grid.Column="2"
+                                    IsEnabled="{x:Bind Battles[3].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[3]}"/>
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="5"
+                                    Grid.Column="1"
+                                    IsEnabled="{x:Bind Battles[4].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[4]}"/>
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="6"
+                                    Grid.Column="2"
+                                    IsEnabled="{x:Bind Battles[5].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[5]}" />
+
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="7"
+                                    Grid.Column="1"
+                                    IsEnabled="{x:Bind Battles[6].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[6]}" />
+
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="8"
+                                    Grid.Column="2"
+                                    IsEnabled="{x:Bind Battles[7].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[7]}" />
+
+                                <Button 
+                                    Style="{StaticResource BattleButton}"
+                                    Grid.Row="9"
+                                    Grid.Column="1"
+                                    IsEnabled="{x:Bind Battles[8].IsUnlocked}"
+                                    Click="OnBattleButtonClicked"
+                                    CommandParameter="{x:Bind Battles[8]}" />
+                            </Grid>                            
+                        </ItemContainer>
+                    </DataTemplate>
+                </ItemsView.ItemTemplate>
+            </ItemsView>            
+        </Grid>
+        <ProgressRing 
+            IsHitTestVisible="False"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            Grid.RowSpan="2"
+            IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+            Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
     </Grid>
 </Page>

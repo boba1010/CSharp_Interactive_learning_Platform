@@ -23,6 +23,7 @@ html, body, #app {
 }
 
 #blazor-error-ui {
+    color: black;
     color-scheme: light only;
     background: lightyellow;
     bottom: 0;

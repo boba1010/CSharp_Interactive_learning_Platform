@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="CSharp_Interactive_Learning_App.WinUI.Views.SignupPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CSharp_Interactive_Learning_App.WinUI.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid
+        Padding="15, 10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            HorizontalAlignment="Center">
+            <Run Text="Signup on" Foreground="White" FontSize="20" />
+            <Run Text="&lt;" Foreground="Gray" FontSize="20" />
+            <Run Text="Codebase" Foreground="RoyalBlue" FontSize="20" />
+            <Run Text="/>" Foreground="Gray" FontSize="20" />
+        </TextBlock>
+
+        <Grid
+            VerticalAlignment="Center"
+            Grid.Row="1"
+            RowSpacing="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBox 
+                Width="300"
+                PlaceholderText="Enter your Full name"
+                Text="{x:Bind ViewModel.User.FullName, Mode=TwoWay}"
+                IsSpellCheckEnabled="False" />
+            <TextBox 
+                Grid.Row="1"
+                Width="300"
+                PlaceholderText="Enter your Username"
+                Text="{x:Bind ViewModel.User.Username, Mode=TwoWay}"
+                IsSpellCheckEnabled="False" />
+            <TextBox 
+                Grid.Row="2"
+                Width="300"
+                PlaceholderText="Enter your email address"
+                Text="{x:Bind ViewModel.User.Email, Mode=TwoWay}"
+                IsSpellCheckEnabled="False" />
+            <TextBox 
+                Grid.Row="3" 
+                Width="300"
+                PlaceholderText="Enter your password"
+                Text="{x:Bind ViewModel.User.Password, Mode=TwoWay}"
+                IsSpellCheckEnabled="False" />
+
+            <TextBlock 
+                MinHeight="0"
+                HorizontalAlignment="Center"
+                Grid.Row="4" 
+                Foreground="Red" 
+                Text="{x:Bind ViewModel.ErrorMsg, Mode=OneWay}" />
+            <Button
+                Grid.Row="5" 
+                Width="300"
+                HorizontalAlignment="Center"
+                Content="Create your new account" 
+                Command="{x:Bind ViewModel.SignupCommand}" />
+        </Grid>
+        <StackPanel Spacing="4" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+            <Button
+                HorizontalAlignment="Center"
+                Content="Have an account? Login." 
+                Click="OnLoginButtonClick" />
+            <Button 
+                HorizontalAlignment="Center"
+                Content="Want to test some code? Enter the Playground!" 
+                Click="OnEnterPlaygroundClick" />
+        </StackPanel>
+    </Grid>
+</Page>
