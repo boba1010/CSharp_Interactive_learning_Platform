@@ -1,5 +1,7 @@
 ﻿using DamageCalculatorV2.Models;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Reflection;
 
 namespace DamageCalculatorV2;
 
@@ -9,16 +11,26 @@ public class DmgCalc
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(code);
 
-        var errorDmgEvaluator = new ErrorDamageEvaluator(dmgMultiplier);
+        List<MetadataReference> references =
+        [
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
+            MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location)
+        ];
 
-        var errors = errorDmgEvaluator.Evaluate(syntaxTree);
+        var compilation = CSharpCompilation.Create("Temp", [syntaxTree], references);
 
-        var root = syntaxTree.GetCompilationUnitRoot();
+        var errorDmgEvaluator = new ErrorDamageEvaluator(dmgMultiplier, compilation);
 
-        var cleanRoot = InvalidSyntaxRemover.Filter(root);
+        var errors = errorDmgEvaluator.Evaluate();
 
-        var dmgEvaluator = new SyntaxDamageEvaluator(dmgMultiplier);
-        dmgEvaluator.Visit(cleanRoot);
+        var cleanTree = InvalidSyntaxRemover.Filter(syntaxTree);
+
+        var cleanCompilation = CSharpCompilation.Create("Temp", [cleanTree], references);
+
+        var semanticModel = cleanCompilation.GetSemanticModel(cleanTree);
+        var dmgEvaluator = new SyntaxDamageEvaluator(dmgMultiplier, semanticModel);
+        dmgEvaluator.Visit(cleanTree.GetRoot());
 
         var totalDamageDealt = dmgEvaluator.DamageDealt;
 

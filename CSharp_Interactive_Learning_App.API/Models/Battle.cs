@@ -34,6 +34,7 @@ public class Battle
     public int HealthPerEnemy { get; set; }
     public double DmgMultiplier { get; set; }
     public int Points { get; set; }
+    public bool IsSkippable { get; set; }
 
     [NotMapped]
     public HashSet<OperationType> AllowedOperationsSet => [.. AllowedOperations];

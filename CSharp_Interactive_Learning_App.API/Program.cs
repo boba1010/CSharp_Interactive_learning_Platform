@@ -287,28 +287,27 @@ score = score % 2;
 These operators are especially useful when you need to repeatedly update the value of a variable.",
         Instructions =
 @"Follow these rules to survive the battle:
-1. Declare the required variables first
+1. Declare 3 numeric variables first
 2. Use ++ to increase a variable by 1
 3. Use -- to decrease a variable by 1
 4. Use +=, -=, *=, /=, or %= when appropriate
-5. Only modify variables that have already been declared
-6. End every statement with ;
-7. Perform the required variable updates",
+5. End every statement with ;
+6. Update each variable two times",
         Points = 500,
-        EnemiesNumber = 3,
+        EnemiesNumber = 10,
         HealthPerEnemy = 8,
-        DmgMultiplier = 1,
+        DmgMultiplier = 1.8,
         RequiredStatements =
         [
             new()
             {
                 AllowedStatementType = StatementType.VariableDeclaration,
-                Count = 2
+                Count = 3
             },
             new()
             {
                 AllowedStatementType = StatementType.VariableAssignment,
-                Count = 2
+                Count = 6
             },
         ],
         AllowedTypes = [.. Enum.GetValues<DataType>()],
@@ -364,11 +363,12 @@ You can test yourself in the Playground",
         EnemiesNumber = 0,
         HealthPerEnemy = 0,
         DmgMultiplier = 1,
-        RequiredStatements = []
+        RequiredStatements = [],
+        IsSkippable = true
     },
     new()
     {
-        Name = "Concatenation",
+        Name = "String concatenation and interpolation",
         Content =
 @"Concatenation means combining multiple pieces of text into one string.
 
@@ -390,16 +390,34 @@ Console.WriteLine(""Hello "" + name);
 
 When a string is combined with another value using +, C# converts the value into text as part of the resulting string.
 
+C# also supports string interpolation, which provides a cleaner way to insert values directly into a string. Interpolated strings start with the $ character, and values are placed inside curly braces:
+
+string firstName = ""John"";
+string lastName = ""Doe"";
+string fullName = $""{firstName} {lastName}"";
+
+You can also interpolate other values:
+
+int score = 100;
+string message = $""Score: {score}"";
+
+String interpolation can be used with Console.WriteLine():
+
+string name = ""John"";
+Console.WriteLine($""Hello {name}"");
+
+String interpolation is often easier to read than concatenation because the values are written directly where they should appear in the resulting string.
+
 You can test and see the result in the Playground",
         Instructions =
 @"Follow these rules to survive the battle:
-1. Declare the required variables first
-2. Use the + operator to concatenate strings
-3. Combine variables and text when required
+1. Declare 3 string variables: firstName, secondName, fullName
+2. Assign firstName and secondName a correct value
+3. Use the + operator to concatenate strings
 4. Use quotation marks correctly around text
 5. You may concatenate multiple values together
 6. End every statement with ;
-7. Create the required concatenated strings",
+7. Concatenate firstName and secondName and assign the result to fullName",
         Points = 200,
         EnemiesNumber = 2,
         HealthPerEnemy = 10,

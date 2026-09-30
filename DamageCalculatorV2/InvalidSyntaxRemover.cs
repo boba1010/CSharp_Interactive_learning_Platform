@@ -6,16 +6,17 @@ namespace DamageCalculatorV2;
 
 public class InvalidSyntaxRemover
 {
-    public static CompilationUnitSyntax Filter(CompilationUnitSyntax root)
+    public static SyntaxTree Filter(SyntaxTree tree)
     {
-        var diagnostics = root.SyntaxTree
-            .GetDiagnostics()
-            .Where(d => d.Severity == DiagnosticSeverity.Error && d.Location.IsInSource)
-            .ToArray();
+        var root = tree.GetRoot();
 
-        var members = root.Members.Where(member => !HasError(member, diagnostics)).ToArray();
+        var diagnostics = tree.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error && d.Location.IsInSource).ToArray();
 
-        return root.WithMembers(SyntaxFactory.List(members));
+        var members = root.ChildNodes().Where(member => !HasError(member, diagnostics)).ToArray();
+
+        var cleanRoot = ((CompilationUnitSyntax)root).WithMembers(SyntaxFactory.List(members.Cast<MemberDeclarationSyntax>()));
+
+        return CSharpSyntaxTree.Create(cleanRoot);
     }
 
     private static bool HasError(SyntaxNode node, Diagnostic[] diagnostics)

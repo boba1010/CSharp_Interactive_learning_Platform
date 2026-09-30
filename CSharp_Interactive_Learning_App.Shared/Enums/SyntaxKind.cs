@@ -2,18 +2,23 @@
 
 public enum SyntaxKind
 {
+    None,
     Addition,
     Subtraction,
     Multiplication,
     Division,
+    Modulo,
     Concatenation,
 
-    Increment,
-    Decrement,
+    PreIncrement,
+    PreDecrement,
+    PostIncrement,
+    PostDecrement,
 
     Assignment,
     AdditionAssignment,
     SubtractionAssignment,
     MultiplicationAssignment,
-    DivisionAssignment
+    DivisionAssignment,
+    ModuloAssignment
 }
