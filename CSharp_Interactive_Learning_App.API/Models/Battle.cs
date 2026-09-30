@@ -6,20 +6,25 @@ namespace CSharp_Interactive_Learning_App.API.Models;
 // must be synced with SyntaxKind
 public enum OperationType
 {
+    None,
     Addition,
     Subtraction,
     Multiplication,
     Division,
+    Modulo,
     Concatenation,
 
-    Increment,
-    Decrement,
+    PreIncrement,
+    PreDecrement,
+    PostIncrement,
+    PostDecrement,
 
     Assignment,
     AdditionAssignment,
     SubtractionAssignment,
     MultiplicationAssignment,
-    DivisionAssignment
+    DivisionAssignment,
+    ModuloAssignment
 }
 
 public class Battle

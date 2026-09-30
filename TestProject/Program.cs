@@ -7,8 +7,7 @@ public class Program
 {
     public static async Task Main()
     {
-        DmgCalc dmgCalc = new();
-        var result = dmgCalc.Calculate(@"string firstName = ""boba""; string secondName = ""amir""; string fullName = firstName + "" "" + secondName;", 1, 5, false, 1);
+        var result = DmgCalc.Calculate(@"string firstName = 100;", 1, 5, 1);
 
         Console.WriteLine($"damage dealt: {result.DamageDealt}");
         Console.WriteLine($"damage taken: {result.DamageTaken}");

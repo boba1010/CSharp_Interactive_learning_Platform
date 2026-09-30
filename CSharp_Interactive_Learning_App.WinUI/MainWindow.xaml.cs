@@ -30,7 +30,7 @@ namespace CSharp_Interactive_Learning_App.WinUI
 
             rootFrame.Navigate(typeof(HomePage));
 
-            WeakReferenceMessenger.Default.Register<BusyStateChangedMessage>(this, (recipient, message) =>
+            WeakReferenceMessenger.Default.Register<BusyStateChangedMessage>(this, (_, message) =>
             {
                 DispatcherQueue.TryEnqueue(() =>
                 {
@@ -50,7 +50,7 @@ namespace CSharp_Interactive_Learning_App.WinUI
                 });
             });
 
-            WeakReferenceMessenger.Default.Register<NavigationMessage>(this, (recipient, message) =>
+            WeakReferenceMessenger.Default.Register<NavigationMessage>(this, (_, message) =>
             {
                 if (message.GoBack && rootFrame.CanGoBack)
                 {
@@ -63,7 +63,7 @@ namespace CSharp_Interactive_Learning_App.WinUI
 
 
 
-            WeakReferenceMessenger.Default.Register<ShowDialogMessage>(this, async (recipient, message) =>
+            WeakReferenceMessenger.Default.Register<ShowDialogMessage>(this, async (_, message) =>
             {
                 await _dialogSemaphore.WaitAsync();
 
@@ -86,12 +86,12 @@ namespace CSharp_Interactive_Learning_App.WinUI
                 }
             });
 
-            WeakReferenceMessenger.Default.Register<NavbarMessage>(this, async (recipient, message) =>
+            WeakReferenceMessenger.Default.Register<NavbarMessage>(this, async (_, message) =>
             {
                 navBar.Visibility = message.Hide ? Visibility.Collapsed : Visibility.Visible;
             });
 
-            WeakReferenceMessenger.Default.Register<InfoBarMessage>(this, async (recipient, message) =>
+            WeakReferenceMessenger.Default.Register<InfoBarMessage>(this, async (_, message) =>
             {
                 infoBar.Title = message.Title;
                 infoBar.Message = message.Message;
@@ -102,6 +102,13 @@ namespace CSharp_Interactive_Learning_App.WinUI
                     infoBar.Severity = InfoBarSeverity.Error;
 
                 infoBar.IsOpen = true;
+            });
+
+            WeakReferenceMessenger.Default.Register<TeachingTipMessage>(this, async (_, message) =>
+            {
+                teachingTip.Title = message.Title;
+                teachingTip.Content = message.Message;
+                teachingTip.IsOpen = true;
             });
         }
 

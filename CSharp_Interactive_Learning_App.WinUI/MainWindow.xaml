@@ -57,5 +57,10 @@
         <Frame 
             Grid.Row="2"
             x:Name="rootFrame" />
+
+        <TeachingTip 
+            x:Name="teachingTip" 
+            Grid.Row="2"
+            IsOpen="False" />
     </Grid>
 </Window>

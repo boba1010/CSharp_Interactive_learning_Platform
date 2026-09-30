@@ -5,6 +5,7 @@ namespace CSharp_Interactive_Learning_App.WinUI.Messages;
 public sealed record BattleMessage(BattleResult Result);
 
 public sealed record InfoBarMessage(string Title, string Message, bool IsWarning = false, bool IsError = false);
+public sealed record TeachingTipMessage(string Title, string Message);
 
 public sealed record NavbarMessage(bool Hide);
 

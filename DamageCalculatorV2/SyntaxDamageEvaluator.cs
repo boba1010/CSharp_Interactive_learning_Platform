@@ -17,8 +17,19 @@ public sealed class SyntaxDamageEvaluator(double multiplier, SemanticModel seman
     public double DamageDealt { get; private set; }
     public List<Statement> Statements { get; } = [];
 
+    private bool HasErrors(SyntaxNode node)
+    {
+        return semanticModel.GetDiagnostics(node.Span).Any(x => x.Severity == DiagnosticSeverity.Error);
+    }
+
     public override void VisitVariableDeclaration(VariableDeclarationSyntax node)
     {
+        if (HasErrors(node))
+        {
+            base.VisitVariableDeclaration(node);
+            return;
+        }
+
         var type = node.Type;
 
         foreach (var variable in node.Variables)
@@ -42,6 +53,12 @@ public sealed class SyntaxDamageEvaluator(double multiplier, SemanticModel seman
 
     public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
     {
+        if (HasErrors(node))
+        {
+            base.VisitAssignmentExpression(node);
+            return;
+        }
+
         if (node.Left is IdentifierNameSyntax identifier)
         {
             var index = Statements.FindIndex(x => x is VariableDeclarationStatement variable && 
@@ -65,6 +82,12 @@ public sealed class SyntaxDamageEvaluator(double multiplier, SemanticModel seman
 
     public override void VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
     {
+        if (HasErrors(node))
+        {
+            base.VisitPrefixUnaryExpression(node);
+            return;
+        }
+
         if (node.Kind() is
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PreIncrementExpression or
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PreDecrementExpression)
@@ -77,6 +100,12 @@ public sealed class SyntaxDamageEvaluator(double multiplier, SemanticModel seman
 
     public override void VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node)
     {
+        if (semanticModel.GetDiagnostics(node.Span).Any(x => x.Severity == DiagnosticSeverity.Error))
+        {
+            base.VisitPostfixUnaryExpression(node);
+            return;
+        }
+
         if (node.Kind() is
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PostIncrementExpression or
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PostDecrementExpression)
@@ -163,7 +192,7 @@ public sealed class SyntaxDamageEvaluator(double multiplier, SemanticModel seman
     {
         return kind switch
         {
-            // binary
+            // Binary
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.AddExpression => SyntaxKind.Addition,
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.SubtractExpression => SyntaxKind.Subtraction,
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.MultiplyExpression => SyntaxKind.Multiplication,
@@ -174,13 +203,16 @@ public sealed class SyntaxDamageEvaluator(double multiplier, SemanticModel seman
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.SimpleAssignmentExpression => SyntaxKind.Assignment,
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.AddAssignmentExpression => SyntaxKind.AdditionAssignment,
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.SubtractAssignmentExpression => SyntaxKind.SubtractionAssignment,
+            Microsoft.CodeAnalysis.CSharp.SyntaxKind.MultiplyAssignmentExpression => SyntaxKind.MultiplicationAssignment,
+            Microsoft.CodeAnalysis.CSharp.SyntaxKind.DivideAssignmentExpression => SyntaxKind.DivisionAssignment,
+            Microsoft.CodeAnalysis.CSharp.SyntaxKind.ModuloAssignmentExpression => SyntaxKind.ModuloAssignment,
 
             // Unary
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PreIncrementExpression => SyntaxKind.PreIncrement,
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PostIncrementExpression => SyntaxKind.PostIncrement,
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PreDecrementExpression => SyntaxKind.PreDecrement,
             Microsoft.CodeAnalysis.CSharp.SyntaxKind.PostDecrementExpression => SyntaxKind.PostDecrement,
-            _ => throw new NotSupportedException($"Unsupported binary operator: {kind}")
+            _ => throw new NotSupportedException($"Unsupported operator: {kind}")
         };
     }
 

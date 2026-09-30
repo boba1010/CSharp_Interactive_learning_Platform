@@ -139,7 +139,15 @@ public class UserController(AppDbContext dbContext, AuthService authService) : C
         var salt = authService.GenerateSalt();
         var hashPassword = authService.HashPassword(request.Password, salt);
 
-        var user = new User { Email = request.Email, Password = hashPassword, Salt = salt, Username = request.Username, FullName = request.FullName };
+        var user = new User 
+        { 
+            Email = request.Email, 
+            Password = hashPassword, 
+            Salt = salt, 
+            Username = request.Username, 
+            FullName = request.FullName,
+            UnlockedLessonIds = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        };
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 

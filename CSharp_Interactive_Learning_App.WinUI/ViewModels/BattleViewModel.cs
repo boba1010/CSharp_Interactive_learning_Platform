@@ -81,6 +81,13 @@ public partial class BattleViewModel(IBattleService battleService) : BaseViewMod
 
         var result = response.Data!;
 
+        if (!string.IsNullOrEmpty(result.Feedback))
+        {
+            IsBusy = false;
+            WeakReferenceMessenger.Default.Send(new TeachingTipMessage("Invalid Syntax Used:", result.Feedback));
+            return;
+        }
+
         TotalXpGained = result.TotalXpGained;
 
         if (result.CalculationResult != null)

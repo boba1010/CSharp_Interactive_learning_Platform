@@ -11,7 +11,7 @@ namespace CSharp_Interactive_Learning_App.API.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/chapters")]
-public class LessonsController(AppDbContext dbContext, IBattleService battleService) : ControllerBase
+public class BattlePostController(AppDbContext dbContext, IBattleService battleService) : ControllerBase
 {
     private int GetUserId()
     {

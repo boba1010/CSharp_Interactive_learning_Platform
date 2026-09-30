@@ -5,9 +5,9 @@ using System.Reflection;
 
 namespace DamageCalculatorV2;
 
-public class DmgCalc
+public static class DmgCalc
 {
-    public CalculationResult Calculate(string code, int enemiesNumber, int healthPerEnemy, bool isBoss, double dmgMultiplier)
+    public static CalculationResult Calculate(string code, int enemiesNumber, int healthPerEnemy, double dmgMultiplier)
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(code);
 

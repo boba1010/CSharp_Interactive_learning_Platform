@@ -69,9 +69,28 @@ public class BattleService(AppDbContext dbContext) : IBattleService
         var battle = chapter.Battles.FirstOrDefault(b => b.Id == battleState.LessonId) 
             ?? throw new InvalidOperationException("Battle could not be found.");
 
+        if (battle.IsSkippable)
+        {
+            if (!user.CompletedLessonIds.Contains(battleState.LessonId))
+            {
+                user.CompletedLessonIds.Add(battle.Id);
+                user.UnlockedLessonIds.Add(battle.Id + 1);
+            }
+
+            dbContext.BattleStates.Remove(battleState);
+            await dbContext.SaveChangesAsync();
+
+            return new BattleResult
+            {
+                IsOver = true,
+                TotalXpGained = 100,
+                Turn = battleState.Turn,
+            };
+        }
+
         DamageCalculationDTO result;
 
-        result = GetCalculationResult(request.Code, false, battleState.EnemiesNumber, battleState.EnemiesHealth / battleState.EnemiesNumber, battle.DmgMultiplier);
+        result = GetCalculationResult(request.Code, battleState.EnemiesNumber, battleState.EnemiesHealth / battleState.EnemiesNumber, battle.DmgMultiplier);
 
         battleState.Turn += 1;
 
@@ -101,7 +120,7 @@ public class BattleService(AppDbContext dbContext) : IBattleService
                     continue;
 
                 var op = (OperationType)declaration.Value.Operator;
-                if (!battle.AllowedOperationsSet.Contains(op))
+                if (!battle.AllowedOperationsSet.Contains(op) && op is not OperationType.None)
                 {
                     await dbContext.SaveChangesAsync();
                     return new BattleResult
@@ -118,7 +137,7 @@ public class BattleService(AppDbContext dbContext) : IBattleService
             foreach (var assignment in variableAssignments)
             {
                 var op = (OperationType)assignment.Value.Operator;
-                if (!battle.AllowedOperationsSet.Contains(op))
+                if (!battle.AllowedOperationsSet.Contains(op) && op is not OperationType.None)
                 {
                     await dbContext.SaveChangesAsync();
                     return new BattleResult
@@ -209,10 +228,9 @@ public class BattleService(AppDbContext dbContext) : IBattleService
         return chapter;
     }
 
-    private DamageCalculationDTO GetCalculationResult(string code, bool isBoss, int enemiesNumber, int healthPerEnemy, double dmgMultiplier)
+    private DamageCalculationDTO GetCalculationResult(string code, int enemiesNumber, int healthPerEnemy, double dmgMultiplier)
     {
-        DmgCalc dmgCalc = new();
-        var result = dmgCalc.Calculate(code, enemiesNumber, healthPerEnemy, isBoss, dmgMultiplier);
+        var result = DmgCalc.Calculate(code, enemiesNumber, healthPerEnemy, dmgMultiplier);
 
         List<EnemyDTO> enemies = [];
         foreach (var enemy in result.RemainingEnemies)

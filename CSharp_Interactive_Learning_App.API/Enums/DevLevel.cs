@@ -4,7 +4,7 @@ public enum DevLevel
 {
     AbsoluteBeginner,
     Beginner,
-    Intermediate,
-    AdvancedIntermediate,
-    Advanced,
+    IntermediateMemoryUser,
+    MemoryManipulator,
+    MemoryExpert,
 }

@@ -101,7 +101,7 @@ string (any text) you can store anything inside a string but it has to be inside
 5. Declare 4 variables",
         EnemiesNumber = 5,
         HealthPerEnemy = 4,
-        DmgMultiplier = 0.8,
+        DmgMultiplier = 1,
         Points = 1800,
         RequiredStatements =
         [
@@ -188,6 +188,7 @@ Rules:
             },
         ],
         AllowedTypes = [.. Enum.GetValues<DataType>()],
+        AllowedOperations = [OperationType.Assignment],
     },
     new()
     {
@@ -234,7 +235,7 @@ The result is 3 because both values are integers.",
 7. Create 2 numeric variables then assign them with a math expression",
         Points = 800,
         EnemiesNumber = 5,
-        HealthPerEnemy = 10,
+        HealthPerEnemy = 8,
         DmgMultiplier = 2.5,
         RequiredStatements =
         [
@@ -296,7 +297,7 @@ These operators are especially useful when you need to repeatedly update the val
         Points = 500,
         EnemiesNumber = 10,
         HealthPerEnemy = 8,
-        DmgMultiplier = 1.8,
+        DmgMultiplier = 3,
         RequiredStatements =
         [
             new()
@@ -471,22 +472,34 @@ The Final Boss will test whether you can actually use C# rather than simply reme
         Instructions =
 @"FINAL BOSS RULES:
 
-1. Declare all required variables correctly
+1. Keep declaring variables and assigning them correctly to defeat the boss
 2. Use the required datatypes
 3. Assign and reassign variables when necessary
-4. Perform the required mathematical calculations
+4. Perform enough mathematical calculations
 5. Use arithmetic operators correctly
 6. Use increment, decrement, or compound assignment operators when required
 7. Use string concatenation when constructing output
 8. End every statement with ;
-9. Follow the required statement counts
-10. Your code must combine multiple concepts from the previous lessons
-
-Defeat the Final Boss by putting everything you have learned together.",
+9. Declare at least 10 variables",
         Points = 3000,
         EnemiesNumber = 1,
         HealthPerEnemy = 1000,
-        DmgMultiplier = 5,
+        DmgMultiplier = 10,
+        RequiredStatements =
+        [
+            new()
+            {
+                AllowedStatementType = StatementType.VariableDeclaration,
+                Count = 10
+            },
+            new()
+            {
+                AllowedStatementType = StatementType.VariableAssignment,
+                Count = 20
+            },
+        ],
+        AllowedTypes = [.. Enum.GetValues<DataType>()],
+        AllowedOperations = [.. Enum.GetValues<OperationType>()]
     },
 ];
 
@@ -508,9 +521,9 @@ List<DeveloperLevel> levels =
 [
     new(1, 200, CSharp_Interactive_Learning_App.API.Enums.DevLevel.AbsoluteBeginner),
     new(2, 500, CSharp_Interactive_Learning_App.API.Enums.DevLevel.Beginner),
-    new(3, 1000, CSharp_Interactive_Learning_App.API.Enums.DevLevel.Intermediate),
-    new(4, 2500, CSharp_Interactive_Learning_App.API.Enums.DevLevel.AdvancedIntermediate),
-    new(5, 10000, CSharp_Interactive_Learning_App.API.Enums.DevLevel.Advanced)
+    new(3, 1000, CSharp_Interactive_Learning_App.API.Enums.DevLevel.IntermediateMemoryUser),
+    new(4, 2500, CSharp_Interactive_Learning_App.API.Enums.DevLevel.MemoryManipulator),
+    new(5, 10000, CSharp_Interactive_Learning_App.API.Enums.DevLevel.MemoryExpert)
 ];
 
 foreach (var level in levels)
